@@ -130,6 +130,89 @@ function get_debian_codename() {
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
+function assert_not_empty() {
+    local -r arg_name="$1"
+    local -r arg_value="$2"
+    local -r reason="$3"
+    if [[ -z "$arg_value" ]]; then
+        log_error "'$arg_name' cannot be empty. $reason"
+        exit 1
+    fi
+}
+function append_line_to_file() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : adds a line to a file in case it hasn't already been added  "
+        echo
+        echo "method usage: append_line_to_file [target file] [line]"
+        echo
+        exit 1
+    fi
+    local -r dest="$1"
+    local -r payload="$2"
+    assert_not_empty "file path" "$dest" "needs a file path to work"
+    assert_not_empty "line " "$payload" "needs a line to append to file"
+    if [[ -z $(grep "$payload" "$dest") ]]; then
+        echo "$payload" >>"$dest"
+    fi
+}
+function add_to_bashrc() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : appends a line to .bashrc in case it hasn't been already added "
+        echo
+        echo "method usage: add_to_bashrc [line]"
+        echo
+        exit 1
+    fi
+    source "$HOME/.bashrc"
+    local payload="$1"
+    log_info "adding $payload to '\$HOME/.bashrc'"
+    append_line_to_file "$HOME/.bashrc" "$payload"
+    source "$HOME/.bashrc"
+}
+function add_profile_env_var() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : adds and exports a variable to .bashrc "
+        echo
+        echo "method usage: add_profile_env_var [variable name] [variable value]"
+        echo
+        exit 1
+    fi
+    local key="$1"
+    local value="$2"
+    add_to_bashrc "export $key=$value"
+}
+function add_to_path() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : adds a directory to path in case it hasn't been already added "
+        echo
+        echo "method usage: add_to_path [target directory]"
+        echo
+        exit 1
+    fi
+    local target_dir="$1"
+    add_profile_env_var "PATH" "\$PATH:$target_dir"
+}
+function node_installer() {
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    log_info "started procedure for installing node js"
+    log_info "adding yarn apt repo key"
+    curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+    echo "deb https://nightly.yarnpkg.com/debian/ nightly main" | sudo tee /etc/apt/sources.list.d/yarn-nightly.list
+    apt-get -qq update
+    log_info "running NodeSource Node.js 12.x installer script"
+    curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
+    # log_info "installing nvm"
+    # curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh  | bash -
+    local -r packages="nodejs,yarn"
+    install_apts "$packages"
+    add_to_path '`yarn global bin`'
+    add_to_path '${home}/.yarn/bin'
+
+}
 function init() {
     if ! has_apt; then
         echo "apt not found. exiting ..."
@@ -166,12 +249,7 @@ function init() {
         confirm_sudo
         echo "ffmpeg-bar not found. installing ..."
         if ! os_command_is_available "npm"; then
-            echo "npm not found. installing ..."
-            curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-            echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-            sudo apt-get update -qq
-            curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
-            sudo apt-get update -qq && sudo apt-get install -yqq nodejs yarn
+            node_installer
         fi
         sudo npm install --global ffmpeg-progressbar-cli
         apt_cleanup
