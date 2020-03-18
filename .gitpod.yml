@@ -1,7 +1,6 @@
 image:
   file: .gitpod.Dockerfile
-tasks:
-  - command: 
+
 tasks:
   - init: >
       chmod +x shellcheck/shellcheck &&
