@@ -24,7 +24,7 @@ function get_debian_codename() {
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
-function m3u8_downloader() {
+function init() {
     if ! has_apt; then
         echo "apt not found. exiting ..."
         exit 1
@@ -60,6 +60,9 @@ function m3u8_downloader() {
         fi
         sudo npm install --global ffmpeg-progressbar-cli
     fi
+}
+function m3u8_downloader() {
+    init
     local -r playlist_file="index.m3u8"
     local -r links="linx"
     local -r chunks_dir="/tmp/stream-dl-chunks"
@@ -88,9 +91,59 @@ function m3u8_downloader() {
     ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy "${name}.mkv"
     rm -rf "${chunks_dir}/${name}"
 }
+function help() {
+    echo
+    echo "Usage: [stream-dl] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo
+    echo
+    echo -e "[Synopsis]:\tuses aria2 to download m3u8 streams and converts them to mkv with ffmpeg"
+    echo
+    echo -e "[hint]:\t\tuse the following to read playlist links from file in which"
+    echo -e "\t\t| is used as seperator; i.e. {URL}|{name}.do not put extention in name."
+    echo -e "\t\tdo not keep file extention in name."
+    echo
+    echo -e "while IFS='|' read -r url name;do stream-dl \"\$name\" \"\$url\"< /dev/null ; done <linx"
+    echo
+    echo "Optional Flags:"
+    echo
+    echo -e "  --init\t\tinitializes and installs dependancies."
+    echo
+    echo "Example:"
+    echo
+    echo "  sudo stream-dl --init "
+    echo
+    echo "  stream-dl \\"
+    echo "      \${name} \\"
+    echo "      \${link} "
+    echo
+}
+function main() {
+    if [[ $# == 0 ]]; then
+        help
+        exit
+    fi
+    while [[ $# -gt 0 ]]; do
+        local key="$1"
+
+        case "$key" in
+        --init)
+            shift
+            log_info "initializing fast apt by downloading base packages and upgrading exisiting ones"
+            init
+            exit
+            ;;
+        *)
+            m3u8_downloader "${@}"
+            exit $?
+            ;;
+        esac
+        shift
+    done
+}
+
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     export -f m3u8_downloader
 else
-    m3u8_downloader "${@}"
+    main "${@}"
     exit $?
 fi

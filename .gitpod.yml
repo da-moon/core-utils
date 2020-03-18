@@ -1,7 +1,13 @@
 image:
   file: .gitpod.Dockerfile
 tasks:
-  - command: chmod +x shellcheck/shellcheck
+  - command: 
+tasks:
+  - init: >
+      chmod +x shellcheck/shellcheck &&
+      chmod +x bin/fast-apt &&
+      chmod +x bin/stream-dl 
+
 vscode:
   extensions:
     - wmaurer.change-case@1.0.0:EFbL568cjs07Ajw2vuXcpw==

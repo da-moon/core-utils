@@ -191,9 +191,55 @@ function apt_fast() {
         apt-get "$@"
     fi
 }
+function help() {
+    echo
+    echo "Usage: [fast-apt] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo
+    echo
+    echo -e "[Synopsis]:\twrapper around apt-get which uses aria2 to download packages"
+    echo -e "\t\twhen running 'install' 'upgrade' and 'dist-upgrade'."
+    echo -e "\t\tin other cases, it just passes the command to apt-get"
+    echo
+    echo
+    echo "Optional Flags:"
+    echo
+    echo -e "  --init\t\tinitializes and installs dependancies."
+    echo
+    echo "Example:"
+    echo
+    echo "  sudo fast-apt --init "
+    echo
+    echo "  sudo fast-apt \\"
+    echo "      install -q nano"
+    echo
+}
+function main() {
+    if [[ $# == 0 ]]; then
+        help
+        exit
+    fi
+    while [[ $# -gt 0 ]]; do
+        local key="$1"
+
+        case "$key" in
+        --init)
+            shift
+            log_info "initializing fast apt by downloading base packages and upgrading exisiting ones"
+            apt_fast upgrade -q
+            exit
+            ;;
+        *)
+            apt_fast "${@}"
+            exit $?
+            ;;
+        esac
+        shift
+    done
+}
+
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     export -f apt_fast
 else
-    apt_fast "${@}"
+    main "${@}"
     exit $?
 fi
