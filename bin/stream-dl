@@ -124,7 +124,12 @@ function apt_cleanup() {
     sudo rm -rf /var/lib/apt/lists/*
     sudo rm -rf /var/cache/apt/archives/*
 }
-function get_debian_codename() {
+function string_strip_prefix() {
+    local -r str="$1"
+    local -r prefix="$2"
+    echo "${str#$prefix}"
+}
+function get_debian_codename(){
     local -r os_release=$(cat /etc/os-release)
     local -r version_codename_line=$(echo "$os_release" | grep -e VERSION_CODENAME)
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
