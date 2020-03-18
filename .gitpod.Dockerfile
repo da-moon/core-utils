@@ -11,7 +11,7 @@ RUN shellcheck --version
 RUN echo 'export PATH="/workspace/core-utils/bin:$PATH"' >>~/.bashrc
 RUN aria2c --dir="/usr/bin/" --out="fast-apt" "https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt"
 RUN aria2c --dir="/usr/bin/" --out="stream-dl" "https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl"
+RUN chmod +x "/usr/bin/fast-apt" && chmod +x "/usr/bin/stream-dl"
 RUN fast-apt --init
 RUN stream-dl --init
-RUN chmod +x "/usr/bin/fast-apt" && chmod +x "/usr/bin/stream-dl"
 CMD ["bash"]
