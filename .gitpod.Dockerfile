@@ -2,7 +2,8 @@ FROM gitpod/workspace-full-vnc
 USER root
 ARG SHELLCHECK_VERSION=stable
 ARG SHELLCHECK_FORMAT=gcc
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y aria2
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
 RUN aria2c "https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
 RUN tar -xvf shellcheck-"${SHELLCHECK_VERSION}".linux.x86_64.tar.xz
 RUN cp shellcheck-"${SHELLCHECK_VERSION}"/shellcheck /usr/bin/
