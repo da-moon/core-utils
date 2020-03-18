@@ -18,14 +18,14 @@ function file_exists() {
 function has_apt() {
     os_command_is_available "apt"
 }
-function get_debian_codename(){
+function get_debian_codename() {
     local -r os_release=$(cat /etc/os-release)
     local -r version_codename_line=$(echo "$os_release" | grep -e VERSION_CODENAME)
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
 function m3u8_downloader() {
-    if ! $(has_apt); then
+    if ! has_apt; then
         echo "apt not found. exiting ..."
         exit 1
     fi
@@ -44,7 +44,7 @@ function m3u8_downloader() {
     if ! os_command_is_available "ffmpeg"; then
         echo "ffmpeg not found. installing ..."
         sudo apt-get update -qq && sudo apt-get install -yqq apt-transport-https
-        curl -fsSL https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add - 
+        curl -fsSL https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add -
         echo "deb https://mkvtoolnix.download/debian/ $(get_debian_codename) main" | sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
         sudo apt-get update -qq && sudo apt-get install -yqq mkvtoolnix ffmpeg
     fi
@@ -65,32 +65,32 @@ function m3u8_downloader() {
     local -r chunks_dir="/tmp/stream-dl-chunks"
     local -r name="$1"
     local -r url="$2"
-    local -r stream_root=${url%/*} 
+    local -r stream_root=${url%/*}
     mkdir -p "${chunks_dir}/${name}"
     pushd "${chunks_dir}/${name}" >/dev/null 2>&1
-    if file_exists "${links}";then
+    if file_exists "${links}"; then
         rm "${links}"
     fi
-    if file_exists "${playlist_file}";then
+    if file_exists "${playlist_file}"; then
         rm "${playlist_file}"
     fi
     wget -qnc "${url}" -O "${playlist_file}"
-    for i in $(grep -Ev '#EXT' ${playlist_file});do
-        echo "${stream_root}/${i}" >> "${links}"
-    done;
+    for i in $(grep -Ev '#EXT' ${playlist_file}); do
+        echo "${stream_root}/${i}" >>"${links}"
+    done
     aria2c -i "${links}" \
         -j 16 \
         --continue=true \
         --max-connection-per-server=16 \
-        --optimize-concurrent-downloads 
+        --optimize-concurrent-downloads
     [[ "$?" != 0 ]] && popd
     popd >/dev/null 2>&1
-    ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy ${name}.mkv
-    rm -rf ${chunks_dir}/${name}
+    ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy "${name}.mkv"
+    rm -rf "${chunks_dir}/${name}"
 }
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-  export -f m3u8_downloader
+    export -f m3u8_downloader
 else
-  m3u8_downloader "${@}"
-  exit $?
+    m3u8_downloader "${@}"
+    exit $?
 fi
