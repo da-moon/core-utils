@@ -251,7 +251,7 @@ function init() {
         if ! os_command_is_available "npm"; then
             node_installer
         fi
-        sudo npm install --global ffmpeg-progressbar-cli
+        npm install --global ffmpeg-progressbar-cli
         apt_cleanup
     fi
 }
