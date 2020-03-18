@@ -246,7 +246,7 @@ function init() {
         log_warn "ffmpeg not found. installing ..."
         sudo apt-get update -qq && sudo apt-get install -yqq apt-transport-https
         curl -fsSL https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add -
-        echo "deb https://mkvtoolnix.download/debian/ $(get_debian_codename) main" | sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
+        echo "deb https://mkvtoolnix.download/debian/ buster main" | sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
         sudo apt-get update -qq && sudo apt-get install -yqq mkvtoolnix ffmpeg
         apt_cleanup
     fi
