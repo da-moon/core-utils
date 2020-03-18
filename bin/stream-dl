@@ -211,34 +211,34 @@ function node_installer() {
     install_apts "$packages"
     add_to_path '`yarn global bin`'
     add_to_path '${home}/.yarn/bin'
-
+    apt_cleanup
 }
 function init() {
     if ! has_apt; then
-        echo "apt not found. exiting ..."
+        log_error "apt not found. exiting ..."
         exit 1
     fi
     if ! os_command_is_available "wget"; then
         confirm_sudo
-        echo "wget not found. installing ..."
+        log_warn "wget not found. installing ..."
         sudo apt-get update -qq && sudo apt-get install -yqq wget
         apt_cleanup
     fi
     if ! os_command_is_available "aria2c"; then
         confirm_sudo
-        echo "aria2 not found. installing ..."
+        log_warn "aria2 not found. installing ..."
         sudo apt-get update -qq && sudo apt-get install -yqq aria2
         apt_cleanup
     fi
     if ! os_command_is_available "curl"; then
         confirm_sudo
-        echo "curl not found. installing ..."
+        log_warn "curl not found. installing ..."
         sudo apt-get update -qq && sudo apt-get install -yqq curl
         apt_cleanup
     fi
     if ! os_command_is_available "ffmpeg"; then
         confirm_sudo
-        echo "ffmpeg not found. installing ..."
+        log_warn "ffmpeg not found. installing ..."
         sudo apt-get update -qq && sudo apt-get install -yqq apt-transport-https
         curl -fsSL https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add -
         echo "deb https://mkvtoolnix.download/debian/ $(get_debian_codename) main" | sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
@@ -246,13 +246,17 @@ function init() {
         apt_cleanup
     fi
     if ! os_command_is_available "ffmpeg-bar"; then
-        confirm_sudo
-        echo "ffmpeg-bar not found. installing ..."
+        
+        log_warn "ffmpeg-bar not found. installing ..."
         if ! os_command_is_available "npm"; then
             node_installer
         fi
-        npm install --global ffmpeg-progressbar-cli
-        apt_cleanup
+         if is_root; then 
+            if  os_command_is_available "npm"; then
+                log_info "install ffmpeg-progress-bar ..."
+                npm install --global ffmpeg-progressbar-cli
+            fi
+        fi
     fi
 }
 function m3u8_downloader() {
