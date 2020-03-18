@@ -83,11 +83,15 @@ function os_command_is_available() {
 function has_sudo() {
     os_command_is_available "sudo"
 }
+function has_apt() {
+    os_command_is_available "apt-get"
+}
 function is_pkg_installed() {
     local -r pkg="$1"
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
+    log_info "apt-utils is not available ... installing now"
     if ! is_root; then
         log_error "needs root permission to run.exiting..."
         exit 1
