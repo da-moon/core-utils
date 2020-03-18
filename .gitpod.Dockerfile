@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full-vnc
+FROM gitpod/workspace-full
 USER root
 ARG SHELLCHECK_VERSION=stable
 ARG SHELLCHECK_FORMAT=gcc
