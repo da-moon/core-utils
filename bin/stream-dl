@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -o errtrace
+set -o functrace
+set -o errexit
+set -o nounset
+set -o pipefail
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+function os_command_is_available() {
+    local name
+    name="$1"
+    command -v "$name" >/dev/null
+}
+function file_exists() {
+    local -r file="$1"
+    [[ -f "$file" ]]
+}
+
+function has_apt() {
+    os_command_is_available "apt"
+}
+function get_debian_codename(){
+    local -r os_release=$(cat /etc/os-release)
+    local -r version_codename_line=$(echo "$os_release" | grep -e VERSION_CODENAME)
+    local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
+    echo "$result"
+}
+function m3u8_downloader() {
+    if ! $(has_apt); then
+        echo "apt not found. exiting ..."
+        exit 1
+    fi
+    if ! os_command_is_available "wget"; then
+        echo "wget not found. installing ..."
+        sudo apt-get update -qq && sudo apt-get install -yqq wget
+    fi
+    if ! os_command_is_available "aria2c"; then
+        echo "aria2 not found. installing ..."
+        sudo apt-get update -qq && sudo apt-get install -yqq aria2
+    fi
+    if ! os_command_is_available "curl"; then
+        echo "curl not found. installing ..."
+        sudo apt-get update -qq && sudo apt-get install -yqq curl
+    fi
+    if ! os_command_is_available "ffmpeg"; then
+        echo "ffmpeg not found. installing ..."
+        sudo apt-get update -qq && sudo apt-get install -yqq apt-transport-https
+        curl -fsSL https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add - 
+        echo "deb https://mkvtoolnix.download/debian/ $(get_debian_codename) main" | sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
+        sudo apt-get update -qq && sudo apt-get install -yqq mkvtoolnix ffmpeg
+    fi
+    if ! os_command_is_available "ffmpeg-bar"; then
+        echo "ffmpeg-bar not found. installing ..."
+        if ! os_command_is_available "npm"; then
+            echo "npm not found. installing ..."
+            curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+            echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+            sudo apt-get update -qq
+            curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
+            sudo apt-get update -qq && sudo apt-get install -yqq nodejs yarn
+        fi
+        sudo npm install --global ffmpeg-progressbar-cli
+    fi
+    local -r playlist_file="index.m3u8"
+    local -r links="linx"
+    local -r chunks_dir="/tmp/stream-dl-chunks"
+    local -r name="$1"
+    local -r url="$2"
+    local -r stream_root=${url%/*} 
+    mkdir -p "${chunks_dir}/${name}"
+    pushd "${chunks_dir}/${name}" >/dev/null 2>&1
+    if file_exists "${links}";then
+        rm "${links}"
+    fi
+    if file_exists "${playlist_file}";then
+        rm "${playlist_file}"
+    fi
+    wget -qnc "${url}" -O "${playlist_file}"
+    for i in $(grep -Ev '#EXT' ${playlist_file});do
+        echo "${stream_root}/${i}" >> "${links}"
+    done;
+    aria2c -i "${links}" \
+        -j 16 \
+        --continue=true \
+        --max-connection-per-server=16 \
+        --optimize-concurrent-downloads 
+    [[ "$?" != 0 ]] && popd
+    popd >/dev/null 2>&1
+    ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy ${name}.mkv
+    rm -rf ${chunks_dir}/${name}
+}
+if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
+  export -f m3u8_downloader
+else
+  m3u8_downloader "${@}"
+  exit $?
+fi
