@@ -88,7 +88,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! is_root; then
+    if ! $(is_root); then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -98,31 +98,34 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! has_sudo; then
+    if ! $(has_sudo); then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
     fi
 }
-function array_split() {
-    local -r separator="$1"
-    local -r str="$2"
-    local -a ary=()
-    IFS="$separator" read -ra ary <<<"$str"
-    echo "${ary[@]}"
-}
 function apt_cleanup() {
     confirm_sudo
-    if file_exists "/tmp/apt-fast.list"; then
-        sudo rm /tmp/apt-fast.list
-    fi
-    sudo apt-get clean
-    sudo rm -rf /var/lib/apt/lists/*
-    sudo rm -rf /var/cache/apt/archives/*
-}
-function apt_fast() {
-    apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    if file_exists "/tmp/apt-fast.list"; then
+        rm /tmp/apt-fast.list
+    fi
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/cache/apt/archives/*
+}
+function filter_installed() {
+    local -r deps=("$@")
+    local -r raw_list=$(dpkg -s ${deps[@]} 2>&1)
+    local -r filtered=$(echo "${raw_list}" | grep -E "dpkg-query: package")
+    local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'\([^']*\).*,\1,p")
+    echo "$trimmed"
+}
+function install_deps() {
+    apt_cleanup
+    confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq
     if ! os_command_is_available "aria2c"; then
         log_info "aria2 not available.installing aria2 ..."
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
@@ -133,6 +136,11 @@ function apt_fast() {
     fi
     if ! os_command_is_available "netselect-apt"; then
         log_info "netselect-apt not available.installing netselect-apt ..."
+        if ! os_command_is_available "wget"; then
+            log_info "wget not available.installing wget ..."
+            DEBIAN_FRONTEND=noninteractive apt-get install -yqq wget
+        fi
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
         pushd "/tmp/" >/dev/null 2>&1
         rm -rf netselect*
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
@@ -160,20 +168,41 @@ function apt_fast() {
             --outfile /etc/apt/sources-fast.list \
             stable
     fi
-    DEBIAN_FRONTEND=noninteractive apt-get -qq update
-    apt-get -y --print-uris "$@" | grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+    deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
+        "make" "vim" "nano" "ca-certificates"
+        "wget" "jq" "unzip"
+        "apt-transport-https" "bzip2" "zip")
+    local -r not_installed=$(filter_installed "${deps[@]}")
+    for pkg in $not_installed; do
+        log_info "adding ${pkg} to install candidates"
+        apt-get -y --print-uris install "$pkg" |
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+    done
+    pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+    aria2c \
+        -j 16 \
+        --continue=true \
+        --max-connection-per-server=16 \
+        --optimize-concurrent-downloads \
+        --connect-timeout=600 \
+        --timeout=600 \
+        --input-file=/tmp/apt-fast.list
+    [[ "$?" != 0 ]] && popd
+    popd >/dev/null 2>&1
+    for pkg in $not_installed; do
+        log_info "installing $pkg"
+        sudo apt-get install -yqq "$pkg"
+    done
+    apt_cleanup
+}
+
+function fast_apt() {
+    log_info "running fast-apt ..."
+    apt_cleanup
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
-        # bsdtar
-        install_deps="git,apt-utils,unzip,build-essential,software-properties-common,"
-        install_deps+="make,vim,nano,ca-certificates,"
-        install_deps+="wget,jq,unzip,"
-        install_deps+="apt-transport-https,bzip2,zip"
-        for software in $(array_split "," "${install_deps}"); do
-            if ! is_pkg_installed "$software"; then
-                log_info "adding dependancy $software to list of software to be installed..."
-                apt-get -y --print-uris install "$software" | grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
-            fi
-        done
+        install_deps
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
             -j 16 \
@@ -186,7 +215,7 @@ function apt_fast() {
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
-        rm /tmp/apt-fast.list
+        apt_cleanup
     else
         apt-get "$@"
     fi
@@ -224,12 +253,12 @@ function main() {
         case "$key" in
         --init)
             shift
-            log_info "initializing fast apt by downloading base packages and upgrading exisiting ones"
-            apt_fast upgrade -q
+            log_info "initializing base packages"
+            install_deps
             exit
             ;;
         *)
-            apt_fast "${@}"
+            fast_apt "${@}"
             exit $?
             ;;
         esac
@@ -238,7 +267,7 @@ function main() {
 }
 
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-    export -f apt_fast
+    export -f fast_apt
 else
     main "${@}"
     exit $?
