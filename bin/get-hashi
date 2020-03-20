@@ -348,7 +348,7 @@ function get_hashi() {
         $name --version >/dev/null
     done
 }
-if [[ -v ${BASH_SOURCE} ]]; then
+if [ -z ${BASH_SOURCE+x} ]; then
     log_warn "yes"
 else
     log_warn "no"
