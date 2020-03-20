@@ -349,9 +349,13 @@ function get_hashi() {
     done
 }
 if [ -n ${BASH_SOURCE+x} ]; then
-    log_warn "yes"
-else
-    log_warn "no"
+    install_deps
+    stack=("vault" "consul" "nomad" "terraform" "packer")
+    if [[ "$#" != 0 ]]; then
+        stack=("${@}")
+    fi
+    log_info "install targets ${stack[*]}"
+    get_hashi "${stack[@]}"
 fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     export -f get_hashi

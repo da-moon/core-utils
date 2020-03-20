@@ -268,9 +268,8 @@ function main() {
     done
 }
 if [ -n ${BASH_SOURCE+x} ]; then
-    log_warn "yes"
-else
-    log_warn "no"
+    main "${@}"
+    exit $?
 fi
 
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
