@@ -356,6 +356,7 @@ if [ -n ${BASH_SOURCE+x} ]; then
     fi
     log_info "install targets ${stack[*]}"
     get_hashi "${stack[@]}"
+    exit $?
 fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     export -f get_hashi
@@ -367,4 +368,6 @@ else
     fi
     log_info "install targets ${stack[*]}"
     get_hashi "${stack[@]}"
+    exit $?
+    ex
 fi
