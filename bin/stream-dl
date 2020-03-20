@@ -237,19 +237,16 @@ function node_installer() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     # script specific packages
     local -r packages=("nodejs" "yarn")
-    if ! os_command_is_available "npm"; then
-        log_info "nodejs not found.downloading and installing nodejs ..."
-        log_info "running NodeSource Node.js 12.x installer script"
-        curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
-        log_info "adding yarn apt repo key"
-        add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
-        add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-        for pkg in $packages; do
-            log_info "adding ${pkg} to install candidates"
-            apt-get -y --print-uris install "$pkg" |
-                grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
-        done
-    fi
+    log_info "running NodeSource Node.js 12.x installer script"
+    curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
+    log_info "adding yarn apt repo key"
+    add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
+    add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
+    for pkg in $packages; do
+        log_info "adding ${pkg} to install candidates"
+        apt-get -y --print-uris install "$pkg" |
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+    done
     # End of scriptspecific packages
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
@@ -280,17 +277,14 @@ function ffmpeg_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r packages=("mkvtoolnix" "ffmpeg")
-    if ! os_command_is_available "ffmpeg"; then
-        log_warn "ffmpeg not found. installing ..."
-        log_info "adding mkvtoolnix apt repo key"
-        add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
-        add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
-        for pkg in $packages; do
-            log_info "adding ${pkg} to install candidates"
-            apt-get -y --print-uris install "$pkg" |
-                grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
-        done
-    fi
+    log_info "adding mkvtoolnix apt repo key"
+    add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
+    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
+    for pkg in $packages; do
+        log_info "adding ${pkg} to install candidates"
+        apt-get -y --print-uris install "$pkg" |
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+    done
     # End of scriptspecific packages
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
