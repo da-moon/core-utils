@@ -267,7 +267,11 @@ function main() {
         shift
     done
 }
-
+if [ -z ${BASH_SOURCE+x} ]; then
+    log_warn "yes"
+else
+    log_warn "no"
+fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     export -f fast_apt
 else
