@@ -71,13 +71,13 @@ sudo wget -q -O /usr/bin/stream-dl https://raw.githubusercontent.com/da-moon/cor
 - `get-hashi`
 
 ```bash
-sudo wget -q -O /usr/bin/get-hashi https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl/get-hashi
+sudo wget -q -O /usr/bin/get-hashi https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi
 ```
 
 - `run-sc`
 
 ```bash
-sudo wget -q -O /usr/bin/run-sc https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl/run-sc
+sudo wget -q -O /usr/bin/run-sc https://raw.githubusercontent.com/da-moon/core-utils/master/bin/run-sc
 ```
 
 ## Call Without Installation
@@ -94,7 +94,7 @@ curl -fsSL https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-
 - `get-hashi` : the following installs `consul` and `vault`
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl/get-hashi | sudo bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi | sudo bash -s -- \
     vault \
     consul
 ```
