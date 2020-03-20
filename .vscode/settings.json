@@ -5,7 +5,7 @@
         "commands": [
             {
                 "isAsync": true,
-                "cmd": "shellcheck/shellcheck"
+                "cmd": "run-sc"
             }
         ]
     }

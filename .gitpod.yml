@@ -3,9 +3,9 @@ image:
 
 tasks:
   - init: >
-      chmod +x shellcheck/shellcheck &&
-      chmod +x bin/fast-apt &&
-      chmod +x bin/stream-dl 
+      echo "init 1" &&
+      echo "init 2" &&
+      echo "init 3"
 
 vscode:
   extensions:
