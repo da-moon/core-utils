@@ -65,6 +65,15 @@ sudo wget -q -O \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt 
 ```
 
+- `gitt`
+
+```bash
+sudo wget -q -O \
+    /usr/bin/gitt \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/gitt && \
+sudo chmod +x /usr/bin/gitt
+```
+
 - `stream-dl`
 
 ```bash
@@ -113,4 +122,5 @@ curl -fsSL \
 ## issues
 
 - [x] `stream-dl` : install_apts not found
+- [ ] `stream-dl` : issues with yarn / ffmpeg-bar install
 - [ ] `run-sc` : broken pipe ?
