@@ -202,6 +202,7 @@ function fast_apt() {
     log_info "running fast-apt ..."
     apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq
     apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         install_deps
