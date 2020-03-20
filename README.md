@@ -14,6 +14,7 @@ all scripts can also be sourced for usage in other script becasue the main funct
 
 - [x] `fast-apt` : uses `aria2`  to download and install apt packages.it should increase `apt install | upgrade | dist-upgrade` 
 speed tremendously. You can also use `fast-apt` command instead of `apt-get` since it wraps it. 
+- [ ] `gitt` : some helper utils and wrappers for `git`
 - [x] `stream-dl` : uses `aria2` to download a `m3u8` stream (based on given url) and uses ffmpeg to convert it to mkv.
 links passed to `stream-dl` must point to `m3u8` main plainlist file. to download multiple streams (multiple playlists),
 store the links into a file (eg, `linx`) and run the following 

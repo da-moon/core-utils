@@ -308,163 +308,188 @@ function init() {
         done
         apt_cleanup
     fi
+}
+# package functions
+function is_git_available() {
+    if ! os_command_is_installed "git"; then
+        log_error "git is not available. existing..."
+        exit 1
+    fi
+}
+function git_undo_commit() {
+    is_git_available
+    git reset --soft HEAD~
+}
+function git_reset_local() {
+    is_git_available
+    git fetch origin
+    git reset --hard origin/master
+}
+function git_pull_latest() {
+    is_git_available
+    git pull --rebase origin master
 
 }
-# end of shared base
-function node_installer() {
-    apt_cleanup
-    confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    # script specific packages
-    local -r packages=("nodejs" "yarn")
-    log_info "running NodeSource Node.js 12.x installer script"
-    curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
-    log_info "adding yarn apt repo key"
-    add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
-    add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    for pkg in $packages; do
-        log_info "adding ${pkg} to install candidates"
-        apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
-    done
-    # End of scriptspecific packages
-    if file_exists "/tmp/apt-fast.list"; then
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        aria2c \
-            -j 16 \
-            --continue=true \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file=/tmp/apt-fast.list
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        for pkg in $packages; do
-            log_info "installing $pkg"
-            sudo apt-get install -yqq "$pkg"
-        done
-        apt_cleanup
-    fi
-    if os_command_is_available "yarn"; then
-        add_to_path '`yarn global bin`'
-        add_to_path '${home}/.yarn/bin'
-    fi
+function git_list_branches() {
+    is_git_available
+    git branch -a
+}
+function git_repo_size() {
+    is_git_available
 
+    # do not show output of git bundle create {>/dev/null 2>&1} ...
+    git bundle create .tmp-git-bundle --all >/dev/null 2>&1
+    # check for existance of du
+    if ! os_command_is_installed "du"; then
+        log_error "du is not available. existing..."
+        exit 1
+    fi
+    local -r size=$(du -sh .tmp-git-bundle | cut -f1)
+    rm .tmp-git-bundle
+    echo "$size"
 }
-function ffmpeg_installer() {
-    apt_cleanup
-    confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    local -r packages=("mkvtoolnix" "ffmpeg")
-    log_info "adding mkvtoolnix apt repo key"
-    add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
-    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
-    for pkg in $packages; do
-        log_info "adding ${pkg} to install candidates"
-        apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
-    done
-    # End of scriptspecific packages
-    if file_exists "/tmp/apt-fast.list"; then
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        aria2c \
-            -j 16 \
-            --continue=true \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file=/tmp/apt-fast.list
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        for pkg in $packages; do
-            log_info "installing $pkg"
-            sudo apt-get install -yqq "$pkg"
-        done
-        apt_cleanup
-    fi
-    if os_command_is_available "npm"; then
-        log_info "install ffmpeg-progress-bar ..."
-        npm install --global ffmpeg-progressbar-cli
-    fi
+function git_user_stats() {
+    local -r user_name="$1"
+    assert_not_empty "user_name" "$user_name" "git username is needed"
+    res=$(git log --author="$user_name" --pretty=tformat: --numstat | gawk -v GREEN='\033[1;32m' -v PLAIN='\033[0m' -v RED='\033[1;31m' 'BEGIN { add = 0; subs = 0 } { add += $1; subs += $2 } END { printf "Total: %s+%s%s / %s-%s%s\n", GREEN, add, PLAIN, RED, subs, PLAIN }')
+    echo "$res"
 }
-function m3u8_downloader() {
-    init
-    local -r playlist_file="index.m3u8"
-    local -r links="linx"
-    local -r chunks_dir="/tmp/stream-dl-chunks"
-    local -r name="$1"
-    local -r url="$2"
-    local -r stream_root=${url%/*}
-    mkdir -p "${chunks_dir}/${name}"
-    pushd "${chunks_dir}/${name}" >/dev/null 2>&1
-    if file_exists "${links}"; then
-        rm "${links}"
-    fi
-    if file_exists "${playlist_file}"; then
-        rm "${playlist_file}"
-    fi
-    wget -qnc "${url}" -O "${playlist_file}"
-    for i in $(grep -Ev '#EXT' ${playlist_file}); do
-        echo "${stream_root}/${i}" >>"${links}"
-    done
-    aria2c -i "${links}" \
-        -j 16 \
-        --continue=true \
-        --max-connection-per-server=16 \
-        --optimize-concurrent-downloads
-    [[ "$?" != 0 ]] && popd
-    popd >/dev/null 2>&1
-    ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy "${name}.mkv"
-    rm -rf "${chunks_dir}/${name}"
-}
+#
 function help() {
     echo
-    echo "Usage: [stream-dl] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo "Usage: [gitt] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
     echo
     echo
-    echo -e "[Synopsis]:\tuses aria2 to download m3u8 streams and converts them to mkv with ffmpeg"
+    echo -e "[Synopsis]:\tAssisting with git operations."
     echo
-    echo -e "[hint]:\t\tuse the following to read playlist links from file in which"
-    echo -e "\t\t| is used as seperator; i.e. {URL}|{name}.do not put extention in name."
-    echo -e "\t\tdo not keep file extention in name."
+    echo "Commands:"
     echo
-    echo -e "while IFS='|' read -r url name;do stream-dl \"\$name\" \"\$url\"< /dev/null ; done <linx"
+    echo -e "  undo-commit\t\tUndo the latest commit."
+    echo
+    echo -e "  reset-local\t\tReset local repo to match remote."
+    echo
+    echo -e "  pull-latest\t\tSync local with remote"
+    echo
+    echo -e "  list-branches\t\tList all branches."
+    echo
+    echo -e "  repo-size\t\tCalculate the repo size."
+    echo
+    echo -e "  user-stats \t\tCalculate total contribution for a user"
+    echo -e "  [flag] --name <arg> \tTarget user's name"
     echo
     echo "Optional Flags:"
     echo
     echo -e "  --init\t\tinitializes and installs dependancies."
+    echo -e "  --path\t\tSets target repo path."
+    echo -e "  \t\t\tBy default, it is the directory terminal is running in."
     echo
     echo "Example:"
     echo
-    echo "  sudo stream-dl --init "
+    echo "  gitt \\"
+    echo "    undo-commit"
     echo
-    echo "  stream-dl \\"
-    echo "      \${name} \\"
-    echo "      \${link} "
+    echo "  gitt \\"
+    echo "  --path \"/workspace/core-utils\" \\"
+    echo "  user-stats \\"
+    echo "  --name da-moon"
     echo
 }
 function main() {
     if [[ $# == 0 ]]; then
         help
-        exit
+        exit 1
     fi
+    if [[ $# -gt 5 ]]; then
+        help
+        exit 1
+    fi
+    local path="."
     while [[ $# -gt 0 ]]; do
         local key="$1"
-
         case "$key" in
         --init)
             shift
-            log_info "initializing stream-dl"
+            log_info "initializing gitt"
             init
-            node_installer
-            ffmpeg_installer
+            exit
+            ;;
+        --path)
+            if [[ $# == 1 ]]; then
+                log_error "path value user input is needed. existing..."
+                exit 1
+            fi
+            path="$2"
+            assert_not_empty "path" "$path" "user input is needed"
+            shift
+            ;;
+        undo-commit)
+            pushd "$path" >/dev/null 2>&1
+            git_undo_commit
+            [[ "$?" != 0 ]] && popd
+            popd >/dev/null 2>&1
+            shift
+            exit
+            ;;
+        reset-local)
+            pushd "$path" >/dev/null 2>&1
+            git_reset_local
+            [[ "$?" != 0 ]] && popd
+            popd >/dev/null 2>&1
+            shift
+            exit
+            ;;
+        pull-latest)
+            pushd "$path" >/dev/null 2>&1
+            git_pull_latest
+            [[ "$?" != 0 ]] && popd
+            popd >/dev/null 2>&1
+            shift
+            exit
+            ;;
+        list-branches)
+            # temporary directory change
+            pushd "$path" >/dev/null 2>&1
+            git_list_branches
+            [[ "$?" != 0 ]] && popd
+            popd >/dev/null 2>&1
+            shift
+            exit
+            ;;
+        repo-size)
+            pushd "$path" >/dev/null 2>&1
+            local size
+            size=$(git_repo_size)
+            [[ "$?" != 0 ]] && popd
+            popd >/dev/null 2>&1
+            log_info "repo size is $size"
+            shift
+            exit
+            ;;
+        user-stats)
+            if [[ "$2" != "--name" ]]; then
+                log_error "[$2] is an invalid flag. existing..."
+                exit 1
+            fi
+            if [[ $# == 2 ]]; then
+                log_error "git username is needed. existing..."
+                exit 1
+            fi
+            pushd "$path" >/dev/null 2>&1
+            res=$(git_user_stats "$3")
+            log_info "$res"
+            [[ "$?" != 0 ]] && popd
+            popd >/dev/null 2>&1
+            shift
+            exit
+            ;;
+        --help)
+            help
             exit
             ;;
         *)
-            m3u8_downloader "${@}"
-            exit $?
+            log_error "Unrecognized option: $key"
+            echo -e "\t\t\t\tRun '$(basename "$0") --help' for a list of known subcommands." >&2
+            exit 1
             ;;
         esac
         shift

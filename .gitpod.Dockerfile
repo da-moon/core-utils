@@ -17,4 +17,7 @@ RUN curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi | sudo bash -s -- 
 RUN wget -q -O /usr/bin/run-sc https://raw.githubusercontent.com/da-moon/core-utils/master/bin/run-sc
 RUN chmod +x "/usr/bin/run-sc"
+RUN wget -q -O /usr/bin/gitt https://raw.githubusercontent.com/da-moon/core-utils/master/bin/gitt
+RUN chmod +x "/usr/bin/gitt"
+RUN gitt --init
 CMD ["bash"] 
