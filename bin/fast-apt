@@ -171,7 +171,7 @@ function install_deps() {
     fi
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
         "make" "vim" "nano" "ca-certificates"
-        "wget" "jq" "unzip"
+        "wget" "jq" "unzip" "ufw"
         "apt-transport-https" "bzip2" "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
     for pkg in $not_installed; do
