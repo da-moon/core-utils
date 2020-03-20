@@ -109,5 +109,6 @@ curl -fsSL \
     consul
 ```
 
+## issues
 
-
+- [ ] `stream-dl` : install_apts not found
