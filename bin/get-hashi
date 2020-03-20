@@ -369,5 +369,4 @@ else
     log_info "install targets ${stack[*]}"
     get_hashi "${stack[@]}"
     exit $?
-    ex
 fi
