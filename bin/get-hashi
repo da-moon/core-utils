@@ -338,9 +338,8 @@ function get_hashi() {
         mkdir -p "/etc/${name}/" "/var/${name}/"
         chmod -R 0600 "/etc/${name}/" "/var/${name}/"
         chmod 0750 "/usr/bin/${name}"
-        if [ -z ${USER+x} ]; then
-            chown "${USER}:${USER}" "/usr/bin/${name}"
-        fi
+        # fails gitpod build
+        # chown "${USER}:${USER}" "/usr/bin/${name}"
         if [[ "$name" == "vault" ]]; then
             setcap cap_ipc_lock=+ep /usr/bin/vault
         fi
