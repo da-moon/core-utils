@@ -59,25 +59,33 @@ the following commands assumes you either have `wget` installed
 - `fast-apt`
 
 ```bash
-sudo wget -q -O /usr/bin/fast-apt https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt 
+sudo wget -q -O \
+    /usr/bin/fast-apt \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt 
 ```
 
 - `stream-dl`
 
 ```bash
-sudo wget -q -O /usr/bin/stream-dl https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl 
+sudo wget -q -O \
+    /usr/bin/stream-dl \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl 
 ```
 
 - `get-hashi`
 
 ```bash
-sudo wget -q -O /usr/bin/get-hashi https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi
+sudo wget -q -O \
+    /usr/bin/get-hashi \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi
 ```
 
 - `run-sc`
 
 ```bash
-sudo wget -q -O /usr/bin/run-sc https://raw.githubusercontent.com/da-moon/core-utils/master/bin/run-sc
+sudo wget -q -O \
+    /usr/bin/run-sc \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/run-sc
 ```
 
 ## Call Without Installation
