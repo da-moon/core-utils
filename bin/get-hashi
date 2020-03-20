@@ -346,7 +346,8 @@ function get_hashi() {
         chmod +x "${install_dir}/${name}"
         rm "/tmp/${name}.zip"
         # confirming install was successful
-        $name --version >/dev/null
+        # breaks gitpod build at the moment
+        # $name --version >/dev/null
     done
 }
 if [ -n ${BASH_SOURCE+x} ]; then
