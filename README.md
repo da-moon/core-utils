@@ -87,14 +87,16 @@ if you don't want to add the scripts to your path for whatever reason, you can u
 - `fast-apt` : the following just installs base dependencies using `fast-apt`
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt | sudo bash -s -- \
---init
+curl -fsSL \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt | sudo bash -s -- \
+    --init
 ```
 
 - `get-hashi` : the following installs `consul` and `vault`
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi | sudo bash -s -- \
+curl -fsSL \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi | sudo bash -s -- \
     vault \
     consul
 ```
