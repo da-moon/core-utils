@@ -68,14 +68,13 @@ function main() {
     local line
     WORKING_DIR="$(
         readlink -f \
-            "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
+            "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/"
     )"
     if [[ -z "$filename" ]]; then
         while read -r filename; do
             set +e
             IFS= read -rd '' line < <(head -n 1 "$filename")
             set -e
-
             if [[ "$line" =~ ^#!/usr/bin/env\ +bash ]]; then
                 check_files+=("$filename")
             fi

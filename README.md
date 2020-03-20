@@ -112,3 +112,4 @@ curl -fsSL \
 ## issues
 
 - [ ] `stream-dl` : install_apts not found
+- [ ] `run-sc` : broken pipe ?

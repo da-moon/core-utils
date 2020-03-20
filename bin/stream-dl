@@ -91,8 +91,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    log_info "apt-utils is not available ... installing now"
-    if ! is_root; then
+    if ! $(is_root); then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -102,27 +101,11 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! has_sudo; then
+    if ! $(has_sudo); then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
     fi
-}
-function array_split() {
-    local -r separator="$1"
-    local -r str="$2"
-    local -a ary=()
-    IFS="$separator" read -ra ary <<<"$str"
-    echo "${ary[@]}"
-}
-function apt_cleanup() {
-    confirm_sudo
-    if file_exists "/tmp/apt-fast.list"; then
-        sudo rm /tmp/apt-fast.list
-    fi
-    sudo apt-get clean
-    sudo rm -rf /var/lib/apt/lists/*
-    sudo rm -rf /var/cache/apt/archives/*
 }
 function string_strip_prefix() {
     local -r str="$1"
@@ -201,69 +184,218 @@ function add_to_path() {
     local target_dir="$1"
     add_profile_env_var "PATH" "\$PATH:$target_dir"
 }
-function node_installer() {
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    log_info "started procedure for installing node js"
-    log_info "adding yarn apt repo key"
-    curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-    echo "deb https://nightly.yarnpkg.com/debian/ nightly main" | sudo tee /etc/apt/sources.list.d/yarn-nightly.list
-    apt-get -qq update
-    log_info "running NodeSource Node.js 12.x installer script"
-    curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
-    # log_info "installing nvm"
-    # curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh  | bash -
-    local -r packages="nodejs,yarn"
-    install_apts "$packages"
-    add_to_path '`yarn global bin`'
-    add_to_path '${home}/.yarn/bin'
-    apt_cleanup
-}
-function init() {
-    if ! has_apt; then
-        log_error "apt not found. exiting ..."
+function add_key() {
+    if [[ $# == 0 ]]; then
+        log_error "No argument was passed to add_key method"
         exit 1
     fi
-    if ! os_command_is_available "wget"; then
-        confirm_sudo
-        log_warn "wget not found. installing ..."
-        sudo apt-get update -qq && sudo apt-get install -yqq wget
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    curl -fsSL "$1" | apt-key add -
+}
+function add_repo() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : adds an apt repository"
+        echo
+        echo "method usage: add_repo [name] [address]"
+        echo
+        exit 1
+    fi
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    local -r dest="/etc/apt/sources.list.d/$1.list"
+    local -r addr="$2"
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    if file_exists "$dest"; then
+        log_warn "a repo source for $1 already exists. deleting the existing one..."
+        rm "$dest"
+    fi
+    log_info "adding repo for $1"
+    echo "$addr" | tee "$dest"
+    apt-get update -qq
+}
+function apt_cleanup() {
+    confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    if file_exists "/tmp/apt-fast.list"; then
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
+        rm /tmp/apt-fast.list
+    fi
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/cache/apt/archives/*
+}
+function filter_installed() {
+    local -r deps=("$@")
+    local -r raw_list=$(dpkg -s ${deps[@]} 2>&1)
+    local -r filtered=$(echo "${raw_list}" | grep -E "dpkg-query: package")
+    local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'\([^']*\).*,\1,p")
+    echo "$trimmed"
+}
+function node_installer() {
+    apt_cleanup
+    confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    # script specific packages
+    local -r packages=("nodejs" "yarn")
+    if ! os_command_is_available "npm"; then
+        log_info "nodejs not found.downloading and installing nodejs ..."
+        log_info "running NodeSource Node.js 12.x installer script"
+        curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
+        log_info "adding yarn apt repo key"
+        add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
+        add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
+        for pkg in $packages; do
+            log_info "adding ${pkg} to install candidates"
+            apt-get -y --print-uris install "$pkg" |
+                grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+        done
+    fi
+    # End of scriptspecific packages
+    if file_exists "/tmp/apt-fast.list"; then
+        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+        for pkg in $packages; do
+            log_info "installing $pkg"
+            sudo apt-get install -yqq "$pkg"
+        done
         apt_cleanup
     fi
-    if ! os_command_is_available "aria2c"; then
-        confirm_sudo
-        log_warn "aria2 not found. installing ..."
-        sudo apt-get update -qq && sudo apt-get install -yqq aria2
-        apt_cleanup
+    if os_command_is_available "yarn"; then
+        add_to_path '`yarn global bin`'
+        add_to_path '${home}/.yarn/bin'
     fi
-    if ! os_command_is_available "curl"; then
-        confirm_sudo
-        log_warn "curl not found. installing ..."
-        sudo apt-get update -qq && sudo apt-get install -yqq curl
-        apt_cleanup
-    fi
-    if ! os_command_is_available "ffmpeg"; then
-        confirm_sudo
-        log_warn "ffmpeg not found. installing ..."
-        sudo apt-get update -qq && sudo apt-get install -yqq apt-transport-https
-        curl -fsSL https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | sudo apt-key add -
-        echo "deb https://mkvtoolnix.download/debian/ buster main" | sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
-        sudo apt-get update -qq && sudo apt-get install -yqq mkvtoolnix ffmpeg
-        apt_cleanup
-    fi
-    if ! os_command_is_available "ffmpeg-bar"; then
 
-        log_warn "ffmpeg-bar not found. installing ..."
-        if ! os_command_is_available "npm"; then
-            node_installer
-        fi
-        if is_root; then
-            if os_command_is_available "npm"; then
-                log_info "install ffmpeg-progress-bar ..."
-                npm install --global ffmpeg-progressbar-cli
-            fi
-        fi
+}
+function ffmpeg_installer() {
+    apt_cleanup
+    confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    local -r packages=("mkvtoolnix" "ffmpeg")
+    if ! os_command_is_available "ffmpeg"; then
+        log_warn "ffmpeg not found. installing ..."
+        log_info "adding mkvtoolnix apt repo key"
+        add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
+        add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
+        for pkg in $packages; do
+            log_info "adding ${pkg} to install candidates"
+            apt-get -y --print-uris install "$pkg" |
+                grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+        done
+    fi
+    # End of scriptspecific packages
+    if file_exists "/tmp/apt-fast.list"; then
+        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+        for pkg in $packages; do
+            log_info "installing $pkg"
+            sudo apt-get install -yqq "$pkg"
+        done
+        apt_cleanup
+    fi
+    if os_command_is_available "npm"; then
+        log_info "install ffmpeg-progress-bar ..."
+        npm install --global ffmpeg-progressbar-cli
     fi
 }
+function init() {
+    apt_cleanup
+    confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    log_info "downloading and installing core dependancies"
+
+    if ! os_command_is_available "aria2c"; then
+        log_info "aria2 not available.installing aria2 ..."
+        DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
+    fi
+    if ! os_command_is_available "curl"; then
+        log_info "curl not available.installing aria2 ..."
+        DEBIAN_FRONTEND=noninteractive apt-get install -yqq curl
+    fi
+    if ! os_command_is_available "wget"; then
+        log_info "wget not available.installing wget ..."
+        DEBIAN_FRONTEND=noninteractive apt-get install -yqq wget
+    fi
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
+    if ! os_command_is_available "netselect-apt"; then
+        log_info "netselect-apt not available.installing netselect-apt ..."
+        pushd "/tmp/" >/dev/null 2>&1
+        rm -rf netselect*
+        echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
+        echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/netselect.list
+        dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
+        dpkg -i netselect-apt_0.3.ds1-28_all.deb
+        rm -rf netselect*
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+    fi
+    if ! file_exists "/etc/apt/sources-fast.list"; then
+        log_warn "fast apt sources have not been added. adding now ..."
+        netselect-apt \
+            --tests 15 \
+            --sources \
+            --nonfree \
+            --outfile /etc/apt/sources-fast.list \
+            stable
+    fi
+    deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
+        "make" "vim" "nano" "ca-certificates"
+        "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
+        "apt-transport-https" "bzip2" "zip")
+    local -r not_installed=$(filter_installed "${deps[@]}")
+    for pkg in $not_installed; do
+        log_info "adding ${pkg} to install candidates"
+        apt-get -y --print-uris install "$pkg" |
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
+    done
+    if file_exists "/tmp/apt-fast.list"; then
+        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+        for pkg in $not_installed; do
+            log_info "installing $pkg"
+            sudo apt-get install -yqq "$pkg"
+        done
+        apt_cleanup
+    fi
+
+}
+# end of shared base
+
 function m3u8_downloader() {
     init
     local -r playlist_file="index.m3u8"
@@ -331,8 +463,10 @@ function main() {
         case "$key" in
         --init)
             shift
-            log_info "initializing fast apt by downloading base packages and upgrading exisiting ones"
+            log_info "initializing stream-dl"
             init
+            node_installer
+            ffmpeg_installer
             exit
             ;;
         *)

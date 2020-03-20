@@ -5,6 +5,7 @@
         "commands": [
             {
                 "isAsync": true,
+                // "cmd": "echo $PWD"
                 "cmd": "run-sc"
             }
         ]
