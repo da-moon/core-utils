@@ -348,6 +348,11 @@ function get_hashi() {
         $name --version >/dev/null
     done
 }
+if [[ -v ${BASH_SOURCE} ]]; then
+    log_warn "yes"
+else
+    log_warn "no"
+fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     export -f get_hashi
 else
