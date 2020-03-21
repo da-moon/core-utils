@@ -311,7 +311,7 @@ function init() {
 }
 # package functions
 function is_git_available() {
-    if ! os_command_is_installed "git"; then
+    if ! os_command_is_available "git"; then
         log_error "git is not available. existing..."
         exit 1
     fi
@@ -340,7 +340,7 @@ function git_repo_size() {
     # do not show output of git bundle create {>/dev/null 2>&1} ...
     git bundle create .tmp-git-bundle --all >/dev/null 2>&1
     # check for existance of du
-    if ! os_command_is_installed "du"; then
+    if ! os_command_is_available "du"; then
         log_error "du is not available. existing..."
         exit 1
     fi
