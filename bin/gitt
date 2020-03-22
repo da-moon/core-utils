@@ -565,8 +565,11 @@ function update() {
         confirm_sudo
         [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     fi
+    log_info "removing old file at $install_location"
     rm "$install_location"
+    log_info "downloading $url"
     wget -q -O "$install_location" "$url"
+    log_info "setting $install_location as executable"
     chmod +x "$install_location"
 }
 function main() {
