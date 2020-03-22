@@ -207,7 +207,6 @@ function init() {
 function fast_apt() {
     apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    DEBIAN_FRONTEND=noninteractive apt-get update
     log_info "getting uris for $@"
     local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
     log_info "uri -> $uri"
