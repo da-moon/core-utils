@@ -15,6 +15,17 @@ all scripts can also be sourced for usage in other script becasue the main funct
 - [x] `fast-apt` : uses `aria2`  to download and install apt packages.it should increase `apt install | upgrade | dist-upgrade` 
 speed tremendously. You can also use `fast-apt` command instead of `apt-get` since it wraps it. 
 - [x] `gitt` : some helper utils and wrappers for `git`
+helps with recursively generating a list of md5hashes in a list of given directories and extracting identical files
+    - [x] `undo-commit` : undos the latest commit.
+    - [x] `reset-local` : reset local repo to match remote branch.
+    - [x] `pull-latest` : syncs local with remote.
+    - [x] `list-branches` : lists all branches.
+    - [ ] `new-branch` : creates a new branch from current and switches into it
+    - [x] `repo-size` : calculates the repo size.
+    - [x] `user-stats` : gets a user's contribution stats (lines added/deleted)
+    - [ ] `clone` : uses aria2 to clone a repo and then extracts it
+    - [ ] `latest-release` : gets latest release version or link of a git repo
+    - [ ] `install-latest` : downloads and installs latest release of a git repo
 - [x] `stream-dl` : uses `aria2` to download a `m3u8` stream (based on given url) and uses ffmpeg to convert it to mkv.
 links passed to `stream-dl` must point to `m3u8` main plainlist file. to download multiple streams (multiple playlists),
 store the links into a file (eg, `linx`) and run the following 
@@ -51,7 +62,11 @@ extension and add the following to `$PWD/.vscode/settings.json`
 after this, every time you save a file with `#!/usr/bin/env bash` shebang, it would run shell check on all
 workspace files that had the shebang.
 
-- [ ] `fast-docker-pull` : uses `aria2`  to download docker images and adds them to docker engine.
+- [ ] `futils` : helps with common file/directory related operation
+    - [ ] `r-md5` : recursively generate a list of md5 hashes in a list of directories. It can also only output duplicates
+    - [ ] `dedup` : remove duplicates in multiple dirs in case they already exist in an origin directory
+- [ ] `extract` : automatically detects archive type and extracts it
+- [ ] `docker-pull` : uses `aria2`  to download docker images and adds them to docker engine.
 
 ## Installation
 

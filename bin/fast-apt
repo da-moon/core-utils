@@ -225,7 +225,7 @@ function fast_apt() {
 }
 function help() {
     echo
-    echo "Usage: [fast-apt] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
     echo
     echo
     echo -e "[Synopsis]:\twrapper around apt-get which uses aria2 to download packages"
@@ -239,9 +239,9 @@ function help() {
     echo
     echo "Example:"
     echo
-    echo "  sudo fast-apt --init "
+    echo "  sudo $(basename "$0") --init "
     echo
-    echo "  sudo fast-apt \\"
+    echo "  sudo $(basename "$0") \\"
     echo "      install -q nano"
     echo
 }
@@ -256,7 +256,7 @@ function main() {
         case "$key" in
         --init)
             shift
-            log_info "initializing base packages"
+            log_info "initializing $(basename "$0")"
             install_deps
             exit
             ;;

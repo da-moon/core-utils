@@ -390,7 +390,6 @@ function ffmpeg_installer() {
     fi
 }
 function m3u8_downloader() {
-    init
     local -r playlist_file="index.m3u8"
     local -r links="linx"
     local -r chunks_dir="/tmp/stream-dl-chunks"
@@ -421,7 +420,7 @@ function m3u8_downloader() {
 }
 function help() {
     echo
-    echo "Usage: [stream-dl] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
     echo
     echo
     echo -e "[Synopsis]:\tuses aria2 to download m3u8 streams and converts them to mkv with ffmpeg"
@@ -430,7 +429,7 @@ function help() {
     echo -e "\t\t| is used as seperator; i.e. {URL}|{name}.do not put extention in name."
     echo -e "\t\tdo not keep file extention in name."
     echo
-    echo -e "while IFS='|' read -r url name;do stream-dl \"\$name\" \"\$url\"< /dev/null ; done <linx"
+    echo -e "while IFS='|' read -r url name;do $(basename "$0") \"\$name\" \"\$url\"< /dev/null ; done <linx"
     echo
     echo "Optional Flags:"
     echo
@@ -438,9 +437,9 @@ function help() {
     echo
     echo "Example:"
     echo
-    echo "  sudo stream-dl --init "
+    echo "  sudo $(basename "$0") --init "
     echo
-    echo "  stream-dl \\"
+    echo "  $(basename "$0") \\"
     echo "      \${name} \\"
     echo "      \${link} "
     echo
@@ -456,7 +455,7 @@ function main() {
         case "$key" in
         --init)
             shift
-            log_info "initializing stream-dl"
+            log_info "initializing $(basename "$0")"
             init
             node_installer
             ffmpeg_installer

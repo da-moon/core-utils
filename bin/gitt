@@ -118,6 +118,75 @@ function get_debian_codename() {
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
+
+function extract() {
+    if file_exists "$1"; then
+        if [[ "$2" == "" ]]; then
+            case "$1" in
+            *.rar)
+                rar x "$1" "${1%.rar}"/
+                if ! os_command_is_available "rar"; then
+                    log_error "rar is not available. existing..."
+                    exit 1
+                fi
+                ;;
+            *.tar.bz2) mkdir -p "${1%.tar.bz2}" && tar xjf "$1" -C "${1%.tar.bz2}"/ ;;
+            *.tar.gz) mkdir -p "${1%.tar.gz}" && tar xzf "$1" -C "${1%.tar.gz}"/ ;;
+            *.tar.xz) mkdir -p "${1%.tar.xz}" && tar xf "$1" -C "${1%.tar.xz}"/ ;;
+            *.tar) mkdir -p "${1%.tar}" && tar xf "$1" -C "${1%.tar}"/ ;;
+            *.tbz2) mkdir -p "${1%.tbz2}" && tar xjf "$1" -C "${1%.tbz2}"/ ;;
+            *.tgz) mkdir -p "${1%.tgz}" && tar xzf "$1" -C "${1%.tgz}"/ ;;
+
+            *.zip)
+                if ! os_command_is_available "unzip"; then
+                    log_error "unzip is not available. existing..."
+                    exit 1
+                fi
+                unzip -oq "$1" -d "${1%.zip}"/
+                ;;
+            # *.zip) unzip "$1" -d "${1%.zip}"/ ;;
+            *.7z) 7za e "$1" -o"${1%.7z}"/ ;;
+            *) log_error "$1 cannot be extracted." ;;
+            esac
+        else
+            case "$1" in
+            *.rar)
+                if ! os_command_is_available "rar"; then
+                    log_error "rar is not available. existing..."
+                    exit 1
+                fi
+                rar x "$1" "$2"
+                ;;
+            *.tar.bz2) mkdir -p "$2" && tar xjf "$1" -C "$2" ;;
+            *.tar.gz) mkdir -p "$2" && tar xzf "$1" -C "$2" ;;
+            *.tar.xz) mkdir -p "$2" && tar xf "$1" -C "$2" ;;
+            *.tar) mkdir -p "$2" && tar xf "$1" -C "$2" ;;
+            *.tbz2) mkdir -p "$2" && tar xjf "$1" -C "$2" ;;
+            *.tgz) mkdir -p "$2" && tar xzf "$1" -C "$2" ;;
+            *.zip)
+                if ! os_command_is_available "unzip"; then
+                    log_error "unzip is not available. existing..."
+                    exit 1
+                fi
+                unzip -oq "$1" -d "$2"
+                ;;
+            # *.zip) unzip "$1" -d "$2" ;;
+            *.7z) 7z e "$1" -o"$2"/ ;;
+            *) log_error "$1 cannot be extracted." ;;
+            esac
+        fi
+    else
+        log_error "$1 cannot be extracted."
+    fi
+}
+function get_file_name() {
+    local -r target="$1"
+    echo "${target##*/}"
+}
+function get_file_dir() {
+    local -r target="$1"
+    echo "${target%/*}"
+}
 function assert_not_empty() {
     local -r arg_name="$1"
     local -r arg_value="$2"
@@ -334,6 +403,20 @@ function git_list_branches() {
     is_git_available
     git branch -a
 }
+function git_new_branch() {
+    is_git_available
+    if [[ $# == 1 ]]; then
+        echo
+        echo "desc : creates a new branch"
+        echo
+        echo "method usage: git_new_branch <branch name>"
+        echo
+        exit 1
+    fi
+    local -r name = "$1"
+    assert_not_empty "name" "$name" "branch name is needed"
+    git checkout -b "$name"
+}
 function git_repo_size() {
     is_git_available
 
@@ -349,33 +432,105 @@ function git_repo_size() {
     echo "$size"
 }
 function git_user_stats() {
+    if [[ $# == 1 ]]; then
+        echo
+        echo "desc : returns users contributions"
+        echo
+        echo "method usage: git_user_stats <user name>"
+        echo
+        exit 1
+    fi
     local -r user_name="$1"
     assert_not_empty "user_name" "$user_name" "git username is needed"
     res=$(git log --author="$user_name" --pretty=tformat: --numstat | awk -v GREEN='\033[1;32m' -v PLAIN='\033[0m' -v RED='\033[1;31m' 'BEGIN { add = 0; subs = 0 } { add += $1; subs += $2 } END { printf "Total: %s+%s%s / %s-%s%s\n", GREEN, add, PLAIN, RED, subs, PLAIN }')
     echo "$res"
 }
-#
+function git_clone() {
+    is_git_available
+    if [[ $# == 0 ]]; then
+        echo
+        echo "desc : clones and extracts a reposiory lists with aria2"
+        echo
+        echo "method usage: git_new_branch <branch name>"
+        echo
+        exit 1
+    fi
+    local -r repos=("$@")
+    local -r download_list="/tmp/git-dl.list"
+    if file_exists "${download_list}"; then
+        log_warn "existing git candidate download list detected.deleting..."
+        rm "$download_list"
+    fi
+    for repo in "${repos[@]}"; do
+        assert_not_empty "repo" "$repo" "repo url cannot be empty"
+        name=$(get_file_name $repo)
+        if file_exists "$PWD/$name.zip"; then
+            log_warn "an exisitng clone of repositry archive exists.deleting..."
+            rm "$PWD/$name.zip"
+        fi
+        log_info "cloning $repo"
+        local -r url="$repo/archive/master.zip"
+        echo "${url}" >>"${download_list}"
+        echo " dir=$PWD" >>"${download_list}"
+        echo " out=$name.zip" >>"${download_list}"
+    done
+    if file_exists "${download_list}"; then
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file="${download_list}"
+    fi
+    for repo in "${repos[@]}"; do
+        name=$(get_file_name $repo)
+        if file_exists "$PWD/$name.zip"; then
+            extract "$PWD/$name.zip" "$name"
+            mv "$PWD/$name/$name-master" "$PWD"
+            rm -rf "$PWD/$name/"
+            mv "$PWD/$name-master/" "$PWD/$name/"
+            rm "$PWD/$name.zip"
+        fi
+    done
+
+}
+
 function help() {
     echo
-    echo "Usage: [gitt] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
     echo
     echo
     echo -e "[Synopsis]:\tAssisting with git operations."
     echo
     echo "Commands:"
     echo
-    echo -e "  undo-commit\t\tUndo the latest commit."
+    echo -e "  undo-commit\t\t\tUndo the latest commit."
     echo
-    echo -e "  reset-local\t\tReset local repo to match remote."
+    echo -e "  reset-local\t\t\tReset local repo to match remote."
     echo
-    echo -e "  pull-latest\t\tSync local with remote"
+    echo -e "  pull-latest\t\t\tSync local with remote"
     echo
-    echo -e "  list-branches\t\tList all branches."
+    echo -e "  list-branches\t\t\tList all branches."
     echo
-    echo -e "  repo-size\t\tCalculate the repo size."
+    echo -e "  new-branch\t\t\tCreates a new branch from current and switches into it"
     echo
-    echo -e "  user-stats \t\tCalculate total contribution for a user"
-    echo -e "  [flag] --name <arg> \tTarget user's name"
+    echo -e "  repo-size\t\t\tCalculate the repo size."
+    echo
+    echo -e "  user-stats \t\t\tCalculate total contribution for a user"
+    echo -e "  [flag] --name <arg> \t\tTarget user's name"
+    echo
+    echo -e "  clone \t\t\tfast cloning git repos by downloading it with aria2.can take multiple addresses"
+    echo -e "  [flag] --addr <arg> \t\taddress of the git repo (without .git)"
+    echo
+    echo -e "  latest-release \t\tfinds latest release of a repo. can also download it if needed"
+    echo -e "  [flag] --addr <arg> \t\taddress of the git repo (without .git)"
+    echo -e "  [flag|optional] --link \treturns download link instead of version number.[DEFAULT false]"
+    echo
+    echo -e "  install-latest \t\tdownloads, unarchives and 'installs' latest release of a repo"
+    echo -e "  [flag] --addr <arg> \t\taddress of the git repo (without .git)"
+    echo -e "  [flag|optional] --path \tpath to store the release binary in.[DEFAULT '/usr/local/bin']"
     echo
     echo "Optional Flags:"
     echo
@@ -385,21 +540,22 @@ function help() {
     echo
     echo "Example:"
     echo
-    echo "  gitt \\"
+    echo "  $(basename "$0") \\"
     echo "    undo-commit"
     echo
-    echo "  gitt \\"
+    echo "  $(basename "$0") \\"
     echo "  --path \"/workspace/core-utils\" \\"
     echo "  user-stats \\"
     echo "  --name da-moon"
     echo
+    echo "  $(basename "$0") clone \\"
+    echo "  --addr https://github.com/jbruchon/jdupes \\"
+    echo "  --addr https://github.com/openssl/openssl \\"
+    echo "  --addr https://github.com/protocolbuffers/protobuf "
+    echo
 }
 function main() {
     if [[ $# == 0 ]]; then
-        help
-        exit 1
-    fi
-    if [[ $# -gt 5 ]]; then
         help
         exit 1
     fi
@@ -409,7 +565,7 @@ function main() {
         case "$key" in
         --init)
             shift
-            log_info "initializing gitt"
+            log_info "initializing $(basename "$0")"
             init
             exit
             ;;
@@ -465,6 +621,7 @@ function main() {
             shift
             exit
             ;;
+
         user-stats)
             if [[ "$2" != "--name" ]]; then
                 log_error "[$2] is an invalid flag. existing..."
@@ -479,6 +636,28 @@ function main() {
             log_info "$res"
             [[ "$?" != 0 ]] && popd
             popd >/dev/null 2>&1
+            shift
+            exit
+            ;;
+        clone)
+            while [[ "$#" -ge 0 ]]; do
+                shift
+                if [[ "$#" != 0 ]]; then
+                    local subkey="$1"
+                    case "$subkey" in
+                    --addr)
+                        shift
+                        git_clone "$1"
+                        ;;
+                    *)
+                        log_error "Unrecognized option: $subkey"
+                        echo -e "\t\t\t\tRun '$(basename "$0") --help' for a list of known subcommands." >&2
+                        exit 1
+                        ;;
+                    esac
+                fi
+
+            done
             shift
             exit
             ;;
@@ -501,8 +680,19 @@ if [ -n ${BASH_SOURCE+x} ]; then
     exit $?
 fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-    export -f m3u8_downloader
+    export -f git_undo_commit
+    export -f git_reset_local
+    export -f git_pull_latest
+    export -f git_list_branches
+    export -f git_new_branch
+    export -f git_repo_size
+    export -f git_user_stats
+    export -f git_clone
 else
     main "${@}"
     exit $?
 fi
+
+list=("https://github.com/jbruchon/jdupes "
+    "https://github.com/openssl/openssl"
+    "https://github.com/protocolbuffers/protobuf")

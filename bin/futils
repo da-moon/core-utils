@@ -83,12 +83,15 @@ function os_command_is_available() {
 function has_sudo() {
     os_command_is_available "sudo"
 }
+function has_apt() {
+    os_command_is_available "apt-get"
+}
 function is_pkg_installed() {
     local -r pkg="$1"
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! is_root; then
+    if ! $(is_root); then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -98,11 +101,117 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! has_sudo; then
+    if ! $(has_sudo); then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
     fi
+}
+function string_strip_prefix() {
+    local -r str="$1"
+    local -r prefix="$2"
+    echo "${str#$prefix}"
+}
+function get_debian_codename() {
+    local -r os_release=$(cat /etc/os-release)
+    local -r version_codename_line=$(echo "$os_release" | grep -e VERSION_CODENAME)
+    local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
+    echo "$result"
+}
+function assert_not_empty() {
+    local -r arg_name="$1"
+    local -r arg_value="$2"
+    local -r reason="$3"
+    if [[ -z "$arg_value" ]]; then
+        log_error "'$arg_name' cannot be empty. $reason"
+        exit 1
+    fi
+}
+function append_line_to_file() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : adds a line to a file in case it hasn't already been added  "
+        echo
+        echo "method usage: append_line_to_file [target file] [line]"
+        echo
+        exit 1
+    fi
+    local -r dest="$1"
+    local -r payload="$2"
+    assert_not_empty "file path" "$dest" "needs a file path to work"
+    assert_not_empty "line " "$payload" "needs a line to append to file"
+    if [[ -z $(grep "$payload" "$dest") ]]; then
+        echo "$payload" >>"$dest"
+    fi
+}
+function add_to_bashrc() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : appends a line to .bashrc in case it hasn't been already added "
+        echo
+        echo "method usage: add_to_bashrc [line]"
+        echo
+        exit 1
+    fi
+    source "$HOME/.bashrc"
+    local payload="$1"
+    log_info "adding $payload to '\$HOME/.bashrc'"
+    append_line_to_file "$HOME/.bashrc" "$payload"
+    source "$HOME/.bashrc"
+}
+function add_profile_env_var() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : adds and exports a variable to .bashrc "
+        echo
+        echo "method usage: add_profile_env_var [variable name] [variable value]"
+        echo
+        exit 1
+    fi
+    local key="$1"
+    local value="$2"
+    add_to_bashrc "export $key=$value"
+}
+function add_to_path() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : adds a directory to path in case it hasn't been already added "
+        echo
+        echo "method usage: add_to_path [target directory]"
+        echo
+        exit 1
+    fi
+    local target_dir="$1"
+    add_profile_env_var "PATH" "\$PATH:$target_dir"
+}
+function add_key() {
+    if [[ $# == 0 ]]; then
+        log_error "No argument was passed to add_key method"
+        exit 1
+    fi
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    curl -fsSL "$1" | apt-key add -
+}
+function add_repo() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : adds an apt repository"
+        echo
+        echo "method usage: add_repo [name] [address]"
+        echo
+        exit 1
+    fi
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    local -r dest="/etc/apt/sources.list.d/$1.list"
+    local -r addr="$2"
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    if file_exists "$dest"; then
+        log_warn "a repo source for $1 already exists. deleting the existing one..."
+        rm "$dest"
+    fi
+    log_info "adding repo for $1"
+    echo "$addr" | tee "$dest"
+    apt-get update -qq
 }
 function apt_cleanup() {
     confirm_sudo
@@ -117,16 +226,18 @@ function apt_cleanup() {
 }
 function filter_installed() {
     local -r deps=("$@")
-    local -r raw_list=$(dpkg -s "${deps[@]}" 2>&1)
+    local -r raw_list=$(dpkg -s ${deps[@]} 2>&1)
     local -r filtered=$(echo "${raw_list}" | grep -E "dpkg-query: package")
     local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'\([^']*\).*,\1,p")
     echo "$trimmed"
 }
-function install_deps() {
+function init() {
     apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    log_info "downloading and installing core dependancies"
+
     if ! os_command_is_available "aria2c"; then
         log_info "aria2 not available.installing aria2 ..."
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
@@ -197,177 +308,87 @@ function install_deps() {
         done
         apt_cleanup
     fi
-}
-function extract() {
-    if file_exists "$1"; then
-        if [[ "$2" == "" ]]; then
-            case "$1" in
-            *.rar)
-                rar x "$1" "${1%.rar}"/
-                if ! os_command_is_available "rar"; then
-                    log_error "rar is not available. existing..."
-                    exit 1
-                fi
-                ;;
-            *.tar.bz2) mkdir -p "${1%.tar.bz2}" && tar xjf "$1" -C "${1%.tar.bz2}"/ ;;
-            *.tar.gz) mkdir -p "${1%.tar.gz}" && tar xzf "$1" -C "${1%.tar.gz}"/ ;;
-            *.tar.xz) mkdir -p "${1%.tar.xz}" && tar xf "$1" -C "${1%.tar.xz}"/ ;;
-            *.tar) mkdir -p "${1%.tar}" && tar xf "$1" -C "${1%.tar}"/ ;;
-            *.tbz2) mkdir -p "${1%.tbz2}" && tar xjf "$1" -C "${1%.tbz2}"/ ;;
-            *.tgz) mkdir -p "${1%.tgz}" && tar xzf "$1" -C "${1%.tgz}"/ ;;
+    pushd "/tmp/" >/dev/null 2>&1
+    log_info "cloning jdupes git repo in /tmp/"
+    local -r url="https://github.com/jbruchon/jdupes"
+    git clone "$url"
+    pushd "/tmp/jdupes" >/dev/null 2>&1
+    log_info "building and install jdupes"
+    make install
+    [[ "$?" != 0 ]] && popd
+    popd >/dev/null 2>&1
+    log_info "cleaning up jdupes folder"
+    rm -rf "/tmp/jdupes"
+    [[ "$?" != 0 ]] && popd
+    popd >/dev/null 2>&1
+    log_info "confirming jdupes installation"
 
-            *.zip)
-                if ! os_command_is_available "unzip"; then
-                    log_error "unzip is not available. existing..."
-                    exit 1
-                fi
-                unzip -oq "$1" -d "${1%.zip}"/
-                ;;
-            # *.zip) unzip "$1" -d "${1%.zip}"/ ;;
-            *.7z) 7za e "$1" -o"${1%.7z}"/ ;;
-            *) log_error "$1 cannot be extracted." ;;
-            esac
-        else
-            case "$1" in
-            *.rar)
-                if ! os_command_is_available "rar"; then
-                    log_error "rar is not available. existing..."
-                    exit 1
-                fi
-                rar x "$1" "$2"
-                ;;
-            *.tar.bz2) mkdir -p "$2" && tar xjf "$1" -C "$2" ;;
-            *.tar.gz) mkdir -p "$2" && tar xzf "$1" -C "$2" ;;
-            *.tar.xz) mkdir -p "$2" && tar xf "$1" -C "$2" ;;
-            *.tar) mkdir -p "$2" && tar xf "$1" -C "$2" ;;
-            *.tbz2) mkdir -p "$2" && tar xjf "$1" -C "$2" ;;
-            *.tgz) mkdir -p "$2" && tar xzf "$1" -C "$2" ;;
-            *.zip)
-                if ! os_command_is_available "unzip"; then
-                    log_error "unzip is not available. existing..."
-                    exit 1
-                fi
-                unzip -oq "$1" -d "$2"
-                ;;
-            # *.zip) unzip "$1" -d "$2" ;;
-            *.7z) 7z e "$1" -o"$2"/ ;;
-            *) log_error "$1 cannot be extracted." ;;
-            esac
-        fi
-    else
-        log_error "$1 cannot be extracted."
-    fi
+    --version
 }
-function get_file_name() {
-    local -r target="$1"
-    echo "${target##*/}"
+
+function help() {
+    echo
+    echo "Usage: [$(basename "$0")] [OPTIONAL FLAG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo
+    echo
+    echo -e "[Synopsis]:\ta collection of file/folder operation helpers"
+    echo
+    echo -e "  r-md5\t\t\tRecursively generate md5 hashes in target dirs ."
+    echo -e "  [flag|optional]\t--dupes \tonly list duplicates.[DEFAULT: 'false']"
+    echo -e "  [flag|optional]\t--output <arg> \tTarget to store the list in.[DEFAULT: 'mdsums.list']"
+    echo -e "  [flag(s)|optional]\t--dir <arg> \tDirectories to search.[DEFAULT: '$PWD']"
+    echo
+    echo -e "  dedup\t\t\tRecursively finds duplicate files in directory by comparing them"
+    echo -e "\t\t\twith files in an origin directory ."
+    echo -e "  \t\t\tIt does not delete duplicates in origin directory"
+    echo -e "  [flag|optional]\t--output <arg> \tTarget to store the list of deleted files in."
+    echo -e "  [flag]\t\t--origin <arg> \torigin directory."
+    echo -e "  [flag(s)]\t\t--target <arg> \tdirectories to be deduplicated."
+    echo
+    echo
+    echo "Optional Flags:"
+    echo
+    echo -e "  --init\t\tinitializes and installs dependancies."
+    echo
+    echo "Example:"
+    echo
+    echo "  sudo $(basename "$0") --init "
+    echo
 }
-function get_file_dir() {
-    local -r target="$1"
-    echo "${target%/*}"
-}
-function assert_not_empty() {
-    local -r arg_name="$1"
-    local -r arg_value="$2"
-    local -r reason="$3"
-    if [[ -z "$arg_value" ]]; then
-        log_error "'$arg_name' cannot be empty. $reason"
-        exit 1
-    fi
-}
-function get_hashi_latest_version() {
-    if [[ $# != 1 ]]; then
-        echo
-        echo "desc : gets latest version of a hashicorp software"
-        echo
-        echo "method usage: get_hashi_latest_version [software name]"
-        echo
-        exit 1
-    fi
-    assert_not_empty "get_hashi_latest_version" "$1" "user input is needed"
-    local -r reply=$(curl -sL "https://releases.hashicorp.com/${1}/index.json")
-    local -r versions=$(echo "$reply" | jq -r '.versions[].version')
-    local -r sorted=$(echo "$versions" | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n)
-    local -r trimmed=$(echo "$sorted" | grep -E -v 'ent|rc|beta')
-    local -r latest=$(echo "$trimmed" | tail -1)
-    echo "$latest"
-}
-function get_hashi() {
+function main() {
     if [[ $# == 0 ]]; then
-        echo
-        echo "desc : downloads and installs lastes hashicorp software"
-        echo
-        echo "method usage: get_hashi [list of software name]"
-        echo
-        exit 1
+        help
+        exit
     fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    local -r packages=("$@")
-    local -r download_list="/tmp/hashistack.list"
-    rm -f "${download_list}"
-    for name in "${packages[@]}"; do
-        log_info "adding ${name}"
-        rm -f "/tmp/${name}"*
-        local version
-        local url
-        version=$(get_hashi_latest_version "${name}")
-        log_info "adding ${name} version ${version} to download-list ${download_list}"
-        url="https://releases.hashicorp.com/${name}/${version}/${name}_${version}_linux_amd64.zip"
-        echo "${url}" >>"${download_list}"
-        echo " out=${name}.zip" >>"${download_list}"
-    done
-    if file_exists "${download_list}"; then
-        pushd "/tmp/" >/dev/null 2>&1
-        aria2c \
-            -j 16 \
-            --continue=true \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file="${download_list}"
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-    fi
+    while [[ $# -gt 0 ]]; do
+        local key="$1"
 
-    local -r install_dir="/usr/bin/"
-    for name in "${packages[@]}"; do
-        extract "/tmp/${name}.zip" "$install_dir"
-        mkdir -p "/etc/${name}/" "/var/${name}/"
-        mkdir -p "/etc/${name}/" "/var/${name}/"
-        chmod -R 0600 "/etc/${name}/" "/var/${name}/"
-        chmod 0750 "/usr/bin/${name}"
-        # fails gitpod build
-        # chown "${USER}:${USER}" "/usr/bin/${name}"
-        if [[ "$name" == "vault" ]]; then
-            setcap cap_ipc_lock=+ep /usr/bin/vault
-        fi
-        chmod +x "${install_dir}/${name}"
-        rm "/tmp/${name}.zip"
-        # confirming install was successful
-        # breaks gitpod build at the moment
-        # $name --version >/dev/null
+        case "$key" in
+        --init)
+            shift
+            log_info "initializing futils"
+            init
+            exit
+            ;;
+        --help)
+            help
+            exit
+            ;;
+        *)
+            log_error "Unrecognized option: $key"
+            echo -e "\t\t\t\tRun '$(basename "$0") --help' for a list of known subcommands." >&2
+            exit 1
+            ;;
+        esac
+        shift
     done
 }
 if [ -n ${BASH_SOURCE+x} ]; then
-    install_deps
-    stack=("vault" "consul" "nomad" "terraform" "packer")
-    if [[ "$#" != 0 ]]; then
-        stack=("${@}")
-    fi
-    log_info "install targets ${stack[*]}"
-    get_hashi "${stack[@]}"
+    main "${@}"
     exit $?
 fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-    export -f get_hashi
 else
-    install_deps
-    stack=("vault" "consul" "nomad" "terraform" "packer")
-    if [[ "$#" != 0 ]]; then
-        stack=("${@}")
-    fi
-    log_info "install targets ${stack[*]}"
-    get_hashi "${stack[@]}"
+    main "${@}"
     exit $?
 fi
