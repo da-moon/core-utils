@@ -207,11 +207,12 @@ function init() {
 function fast_apt() {
     apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    log_info "getting uris for $@"
-    local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
-    log_info "uri -> $uri"
-    echo "$uri" >>/tmp/apt-fast.list
+
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
+        log_info "getting uris for $@"
+        local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
+        log_info "uri -> $uri"
+        echo "$uri" >>/tmp/apt-fast.list
         # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
