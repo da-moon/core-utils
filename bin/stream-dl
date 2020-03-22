@@ -86,6 +86,9 @@ function has_sudo() {
 function has_apt() {
     os_command_is_available "apt-get"
 }
+function has_parallel() {
+    os_command_is_available "parallel"
+}
 function is_pkg_installed() {
     local -r pkg="$1"
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
@@ -281,7 +284,7 @@ function init() {
             stable
     fi
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
-        "make" "vim" "nano" "ca-certificates"
+        "make" "vim" "nano" "ca-certificates" "parallel"
         "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
         "apt-transport-https" "bzip2" "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
@@ -308,7 +311,10 @@ function init() {
         done
         apt_cleanup
     fi
-
+    if has_parallel; then
+        log_info "parallelizing env  ..."
+        env_parallel --init
+    fi
 }
 # end of shared base
 function node_installer() {

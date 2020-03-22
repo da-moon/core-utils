@@ -62,6 +62,9 @@ extension and add the following to `$PWD/.vscode/settings.json`
 after this, every time you save a file with `#!/usr/bin/env bash` shebang, it would run shell check on all
 workspace files that had the shebang.
 
+- [ ] `get-protobuf` : installs latest version of protobuf compiler.
+- [ ] `get-go` : installs latest version of golang compiler and tool chain.
+- [ ] `get-java` : installs latest version of java compiler.
 - [ ] `futils` : helps with common file/directory related operation
     - [ ] `r-md5` : recursively generate a list of md5 hashes in a list of directories. It can also only output duplicates
     - [ ] `dedup` : remove duplicates in multiple dirs in case they already exist in an origin directory

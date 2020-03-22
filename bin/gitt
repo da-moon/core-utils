@@ -86,6 +86,9 @@ function has_sudo() {
 function has_apt() {
     os_command_is_available "apt-get"
 }
+function has_parallel() {
+    os_command_is_available "parallel"
+}
 function is_pkg_installed() {
     local -r pkg="$1"
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
@@ -118,7 +121,6 @@ function get_debian_codename() {
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
-
 function extract() {
     if file_exists "$1"; then
         if [[ "$2" == "" ]]; then
@@ -350,7 +352,7 @@ function init() {
             stable
     fi
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
-        "make" "vim" "nano" "ca-certificates"
+        "make" "vim" "nano" "ca-certificates" "parallel"
         "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
         "apt-transport-https" "bzip2" "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
@@ -376,6 +378,10 @@ function init() {
             sudo apt-get install -yqq "$pkg"
         done
         apt_cleanup
+    fi
+    if has_parallel; then
+        log_info "parallelizing env  ..."
+        env_parallel --init
     fi
 }
 # package functions
@@ -496,7 +502,23 @@ function git_clone() {
     done
 
 }
-
+function git_release_list() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : get a repo's releases from"
+        echo
+        echo "method usage: get_releases_from_git [repo owner] [repo name]"
+        echo
+        exit 1
+    fi
+    local -r owner="$1"
+    local -r repo="$2"
+    local -r reply=$(curl -sL https://api.github.com/repos/${owner}/${repo}/tags)
+    local -r versions=$(echo "${reply}" | jq -r '.[].name')
+    local -r sorted=$(echo "${versions}" | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n)
+    local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')
+    echo "$trimmed"
+}
 function help() {
     echo
     echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
@@ -523,6 +545,10 @@ function help() {
     echo
     echo -e "  clone \t\t\tfast cloning git repos by downloading it with aria2.can take multiple addresses"
     echo -e "  [flag] --addr <arg> \t\taddress of the git repo (without .git)"
+    echo
+    echo -e "  release-list \t\tfinds a list of releases of a repo"
+    echo -e "  [flag] --owner <arg> \t\trepo owner"
+    echo -e "  [flag] --name <arg> \t\trepo name"
     echo
     echo -e "  latest-release \t\tfinds latest release of a repo. can also download it if needed"
     echo -e "  [flag] --addr <arg> \t\taddress of the git repo (without .git)"
