@@ -122,7 +122,7 @@ function filter_installed() {
     local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'\([^']*\).*,\1,p")
     echo "$trimmed"
 }
-function install_deps() {
+function init() {
     apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
@@ -205,7 +205,7 @@ function fast_apt() {
     DEBIAN_FRONTEND=noninteractive apt-get update -qq
     apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
-        install_deps
+        # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
             -j 16 \
@@ -235,7 +235,8 @@ function help() {
     echo
     echo "Optional Flags:"
     echo
-    echo -e "  --init\t\tinitializes and installs dependancies."
+    echo -e "  --init\t\tinitializes and installs dependancies for $(basename "$0")"
+    echo -e "  --update\t\tupdates $(basename "$0") to the letest version at master branch."
     echo
     echo "Example:"
     echo
@@ -244,6 +245,20 @@ function help() {
     echo "  sudo $(basename "$0") \\"
     echo "      install -q nano"
     echo
+}
+
+function update() {
+    local -r url="https://raw.githubusercontent.com/da-moon/core-utils/master/bin/$(basename "$0")"
+    local -r install_location=$(whereis "$(basename "$0")" | grep -E -o "$(basename "$0").*" | cut -f2- -d: | tr -s ' ' | cut -d ' ' -f2)
+    log_info "updating $(basename "$0") located at $install_location"
+    if [ ! -w "$install_location" ]; then
+        log_info "needs sudo for updating file at $install_location"
+        confirm_sudo
+        [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    fi
+    rm "$install_location"
+    wget -q -O "$install_location" "$url"
+    chmod +x "$install_location"
 }
 function main() {
     if [[ $# == 0 ]]; then
@@ -255,10 +270,13 @@ function main() {
 
         case "$key" in
         --init)
-            shift
             log_info "initializing $(basename "$0")"
-            install_deps
-            exit
+            init
+            shift
+            ;;
+        --update)
+            update
+            shift
             ;;
         *)
             fast_apt "${@}"
