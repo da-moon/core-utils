@@ -126,7 +126,7 @@ function install_deps() {
     apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get update
     if ! os_command_is_available "aria2c"; then
         log_info "aria2 not available.installing aria2 ..."
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2

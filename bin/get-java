@@ -282,7 +282,7 @@ function add_repo() {
     fi
     log_info "adding repo for $1"
     echo "$addr" | tee "$dest"
-    apt-get update -qq
+    apt-get update
 }
 function apt_cleanup() {
     confirm_sudo
@@ -306,7 +306,7 @@ function init() {
     apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get update
     log_info "downloading and installing core dependancies"
 
     if ! os_command_is_available "aria2c"; then
