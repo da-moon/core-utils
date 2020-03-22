@@ -202,7 +202,7 @@ function init() {
     fi
     if has_parallel; then
         log_info "parallelizing env  ..."
-        env_parallel --init
+        env_parallel --install
     fi
 }
 function fast_apt() {
