@@ -115,7 +115,7 @@ function apt_cleanup() {
         rm /tmp/apt-fast.list
     fi
     apt-get clean
-    rm -rf /var/lib/apt/lists/*
+    # rm -rf /var/lib/apt/lists/*
     rm -rf /var/cache/apt/archives/*
 }
 function filter_installed() {
@@ -205,7 +205,6 @@ function init() {
     fi
 }
 function fast_apt() {
-    apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
 
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
