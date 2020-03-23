@@ -112,7 +112,7 @@ function apt_cleanup() {
         rm /tmp/apt-fast.list
     fi
     apt-get clean
-    # rm -rf /var/lib/apt/lists/* 
+    # rm -rf /var/lib/apt/lists/*
     rm -rf /var/cache/apt/archives/*
 }
 function filter_installed() {
@@ -147,8 +147,10 @@ function install_deps() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         aria2c \
-            -j 16 \
+            --split=16 \
             --continue=true \
+            --min-split-size=1M \
+            --max-concurrent-downloads=32 \
             --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
@@ -182,8 +184,10 @@ function install_deps() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            -j 16 \
+            --split=16 \
             --continue=true \
+            --min-split-size=1M \
+            --max-concurrent-downloads=32 \
             --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
@@ -319,9 +323,11 @@ function get_hashi() {
     if file_exists "${download_list}"; then
         pushd "/tmp/" >/dev/null 2>&1
         aria2c \
-            -j 16 \
+            --split=16 \
             --continue=true \
+            --min-split-size=1M \
             --max-connection-per-server=16 \
+            --max-concurrent-downloads=32 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \

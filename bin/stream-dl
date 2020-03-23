@@ -224,7 +224,7 @@ function apt_cleanup() {
         rm /tmp/apt-fast.list
     fi
     apt-get clean
-    # rm -rf /var/lib/apt/lists/* 
+    # rm -rf /var/lib/apt/lists/*
     rm -rf /var/cache/apt/archives/*
 }
 function filter_installed() {
@@ -261,10 +261,12 @@ function init() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         aria2c \
-            -j 16 \
-            --continue=true \
+            --split=16 \ 
+        --continue=true \
             --max-connection-per-server=16 \
+            --min-split-size=1M \
             --optimize-concurrent-downloads \
+            --max-concurrent-downloads=32 \
             --connect-timeout=600 \
             --timeout=600 \
             --input-file=/tmp/netselect.list
@@ -296,9 +298,11 @@ function init() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            -j 16 \
+            --split=16 \
             --continue=true \
             --max-connection-per-server=16 \
+            --min-split-size=1M \
+            --max-concurrent-downloads=32 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
@@ -337,9 +341,11 @@ function node_installer() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            -j 16 \
+            --split=16 \
             --continue=true \
             --max-connection-per-server=16 \
+            --min-split-size=1M \
+            --max-concurrent-downloads=32 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
@@ -375,10 +381,12 @@ function ffmpeg_installer() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            -j 16 \
+            --split=16 \
             --continue=true \
             --max-connection-per-server=16 \
+            --max-concurrent-downloads=32 \
             --optimize-concurrent-downloads \
+            --min-split-size=1M \
             --connect-timeout=600 \
             --timeout=600 \
             --input-file=/tmp/apt-fast.list
@@ -415,8 +423,10 @@ function m3u8_downloader() {
         echo "${stream_root}/${i}" >>"${links}"
     done
     aria2c -i "${links}" \
-        -j 16 \
+        --split=16 \
         --continue=true \
+        --min-split-size=1M \
+        --max-concurrent-downloads=32 \
         --max-connection-per-server=16 \
         --optimize-concurrent-downloads
     [[ "$?" != 0 ]] && popd
