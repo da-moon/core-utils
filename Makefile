@@ -20,16 +20,18 @@ build: clean
 			)\
 		)
 	- $(call print_completed_target,flattened makefiles)
-	- $(call remove_matching_lines, #, $(output))
-	- $(call print_completed_target,removed comments)
-	- $(call remove_matching_lines, include, $(output))
-	- $(call print_completed_target,removed includes)
+	- $(call remove_matching_lines,#!, $(output))
+	- $(call print_completed_target,removed script shebangs)
+	- $(call remove_matching_lines,# shellcheck, $(output))
+	- $(call print_completed_target,removed script shellcheck)
+	- $(call remove_matching_lines,dirname "${BASH_SOURCE[0]}" , $(output))
+	- $(call print_completed_target,removed individual script source)
 	- $(call remove_empty_lines, $(output))
 	- $(call print_completed_target,removed empty lines)
 	- $(call print_completed_target)
 
 clean:
 	- $(call print_running_target)
-	- $(RM) flatten
-	- $(MKDIR) flatten
+	- $(RM) flattened
+	- $(MKDIR) flattened
 	- $(call print_completed_target)

@@ -133,6 +133,7 @@ function git_release_list() {
     local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')
     echo "$trimmed"
 }
+export -f s
 export -f is_git_available
 export -f git_undo_commit
 export -f git_reset_local

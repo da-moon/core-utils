@@ -12,6 +12,7 @@ all scripts can also be sourced for usage in other script becasue the main funct
 
 ## Executables
 
+- [ ] `get-shfmt`:https://github.com/tmknom/shfmt/blob/master/Dockerfile
 - [x] `fast-apt` : uses `aria2`  to download and install apt packages.it should increase `apt install | upgrade | dist-upgrade` 
 speed tremendously. You can also use `fast-apt` command instead of `apt-get` since it wraps it. 
 - [x] `gitt` : some helper utils and wrappers for `git`

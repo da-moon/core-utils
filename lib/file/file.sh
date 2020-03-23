@@ -82,3 +82,11 @@ function add_to_path() {
     local target_dir="$1"
     add_profile_env_var "PATH" "$PATH:$target_dir"
 }
+export -f file_exists
+export -f get_file_name
+export -f get_file_dir
+export -f file_exists
+export -f append_line_to_file
+export -f add_to_bashrc
+export -f add_profile_env_var
+export -f add_to_path
