@@ -149,16 +149,13 @@ function init() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         aria2c \
-            --split=16 \
             --continue=true \
-            --min-split-size=1M \
+            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
-            --max-concurrent-downloads=32 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file=/tmp/netselect.list
-        dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
+            dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
         dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
         [[ "$?" != 0 ]] && popd
@@ -208,7 +205,7 @@ function init() {
 }
 function fast_apt() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-
+    apt_cleanup
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"
         local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
@@ -217,9 +214,8 @@ function fast_apt() {
         # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            --max-concurrent-downloads=32 \
             --continue=true \
-            --min-split-size=1M \
+            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
