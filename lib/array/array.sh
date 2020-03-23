@@ -50,7 +50,3 @@ local -ar ary=("$@")
 updated_ary=("${ary[@]/#/$prefix}")
 echo "${updated_ary[*]}"
 }
-export -f array_contains
-export -f array_split
-export -f array_join
-export -f array_prepend
