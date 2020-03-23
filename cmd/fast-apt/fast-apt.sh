@@ -98,9 +98,8 @@ if [ -n ${BASH_SOURCE+x} ]; then
     exit $?
 fi
 
-if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
+if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
     export -f fast_apt
-else
     main "${@}"
     exit $?
 fi

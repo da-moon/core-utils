@@ -22,15 +22,20 @@ BUILD_TARGETS = $(BINS:%=build-%)
 FLATTEN_TARGETS = $(BINS:%=flatten-%)
 CLEAN_TARGETS = $(BINS:%=clean-%)
 
-.PHONY: build $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
-.SILENT: build $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
+.PHONY: build clean $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
+.SILENT: build clean $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
 
 build: $(CLEAN_TARGETS)
+	- $(call print_running_target)
 	- $(MKDIR) flattened
 	- $(MKDIR) bin
 	- $(call print_running_target)
 	- @$(MAKE) --no-print-directory -f $(THIS_FILE) $(BUILD_TARGETS)
 	- $(RM) flattened
+	- $(call print_completed_target)
+clean: 
+	- $(call print_running_target)
+	- @$(MAKE) --no-print-directory -f $(THIS_FILE) $(CLEAN_TARGETS)
 	- $(call print_completed_target)
 
 $(BUILD_TARGETS):$(FLATTEN_TARGETS)
