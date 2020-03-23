@@ -38,3 +38,7 @@ function log_error() {
     local -r message="$1"
     log "ERROR" "$message"
 }
+export -f log
+export -f log_info
+export -f log_warn
+export -f log_error

@@ -91,14 +91,14 @@ function apt_cleanup() {
         rm /tmp/apt-fast.list
     fi
     apt-get clean
-    # rm -rf /var/lib/apt/lists/*
-    rm -rf /var/cache/apt/archives/*
+    # rm -rf /var/lib/apt/lists/apt.llvm.org_disco_dists_llvm-toolchain-disco_InRelease /var/lib/apt/lists/apt.llvm.org_disco_dists_llvm-toolchain-disco_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-backports_InRelease /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-backports_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-backports_universe_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_InRelease /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_multiverse_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_restricted_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_universe_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_InRelease /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_multiverse_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_restricted_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_universe_binary-amd64_Packages.lz4 /var/lib/apt/lists/auxfiles /var/lib/apt/lists/lock /var/lib/apt/lists/mkvtoolnix.download_debian_dists_buster_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/mkvtoolnix.download_debian_dists_buster_Release /var/lib/apt/lists/mkvtoolnix.download_debian_dists_buster_Release.gpg /var/lib/apt/lists/partial /var/lib/apt/lists/ppa.launchpad.net_git-core_ppa_ubuntu_dists_disco_InRelease /var/lib/apt/lists/ppa.launchpad.net_git-core_ppa_ubuntu_dists_disco_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_InRelease /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_multiverse_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_restricted_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_universe_binary-amd64_Packages.lz4
+    rm -rf /var/cache/apt/archives/lock /var/cache/apt/archives/partial
 }
 function filter_installed() {
     local -r deps=("$@")
     local -r raw_list=$(dpkg -s ${deps[@]} 2>&1)
     local -r filtered=$(echo "${raw_list}" | grep -E "dpkg-query: package")
-    local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'\([^']*\).*,\1,p")
+    local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'([^']*).*,1,p")
     echo "$trimmed"
 }
 function assert_is_installed() {
@@ -108,3 +108,16 @@ function assert_is_installed() {
         exit 1
     fi
 }
+export -f is_root
+export -f os_command_is_available
+export -f has_sudo
+export -f has_apt
+export -f has_parallel
+export -f is_pkg_installed
+export -f confirm_sudo
+export -f get_debian_codename
+export -f add_key
+export -f add_repo
+export -f apt_cleanup
+export -f filter_installed
+export -f assert_is_installed

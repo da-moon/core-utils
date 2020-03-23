@@ -23,8 +23,8 @@ function string_to_uppercase() {
     echo "$str" | awk '{print toupper($0)}'
 }
 # eg .
-# string_strip_prefix "foo=bar" "foo="  ===> "bar"
-# string_strip_prefix "foo=bar" "*="    ===> "bar"
+# string_strip_prefix "foo=bar" "foo=" ===> "bar"
+# string_strip_prefix "foo=bar" "*=" ===> "bar"
 function string_strip_prefix() {
     local -r str="$1"
     local -r prefix="$2"
@@ -32,8 +32,8 @@ function string_strip_prefix() {
 }
 
 # eg:
-# string_strip_suffix "foo=bar" "=bar"  ===> "foo"
-# string_strip_suffix "foo=bar" "=*"    ===> "foo"
+# string_strip_suffix "foo=bar" "=bar" ===> "foo"
+# string_strip_suffix "foo=bar" "=*" ===> "foo"
 function string_strip_suffix() {
     local -r str="$1"
     local -r suffix="$2"
@@ -53,7 +53,7 @@ function string_colorify() {
     ncolors=$(tput colors)
     if [[ $ncolors -ge 8 ]]; then
         local -r color_code="$1"
-        echo -e "\e[1m\e[$color_code"m"$input\e[0m"
+        echo -e "e[1me[$color_code"m"$inpute[0m"
     else
         echo -e "$input"
     fi
@@ -90,3 +90,15 @@ function assert_not_empty() {
         exit 1
     fi
 }
+export -f string_contains
+export -f string_multiline_contains
+export -f string_to_uppercase
+export -f string_strip_prefix
+export -f string_strip_suffix
+export -f string_is_empty_or_null
+export -f string_colorify
+export -f string_blue
+export -f string_yellow
+export -f string_green
+export -f string_red
+export -f assert_not_empty

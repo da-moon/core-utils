@@ -69,7 +69,7 @@ function git_user_stats() {
     fi
     local -r user_name="$1"
     assert_not_empty "user_name" "$user_name" "git username is needed"
-    res=$(git log --author="$user_name" --pretty=tformat: --numstat | awk -v GREEN='\033[1;32m' -v PLAIN='\033[0m' -v RED='\033[1;31m' 'BEGIN { add = 0; subs = 0 } { add += $1; subs += $2 } END { printf "Total: %s+%s%s / %s-%s%s\n", GREEN, add, PLAIN, RED, subs, PLAIN }')
+    res=$(git log --author="$user_name" --pretty=tformat: --numstat | awk -v GREEN='033[1;32m' -v PLAIN='033[0m' -v RED='033[1;31m' 'BEGIN { add = 0; subs = 0 } { add += $1; subs += $2 } END { printf "Total: %s+%s%s / %s-%s%sn", GREEN, add, PLAIN, RED, subs, PLAIN }')
     echo "$res"
 }
 function git_clone() {
@@ -102,14 +102,7 @@ function git_clone() {
         echo " out=$name.zip" >>"${download_list}"
     done
     if file_exists "${download_list}"; then
-        aria2c \
-            --continue=true \
-            --max-concurrent-downloads=16 \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file="${download_list}"
+        aria2c --continue=true --max-concurrent-downloads=16 --max-connection-per-server=16 --optimize-concurrent-downloads --connect-timeout=600 --timeout=600 --input-file="${download_list}"
     fi
     for repo in "${repos[@]}"; do
         name=$(get_file_name $repo)
@@ -140,14 +133,13 @@ function git_release_list() {
     local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')
     echo "$trimmed"
 }
-# @todo see if bash source is available
-# if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-#     export -f git_undo_commit
-#     export -f git_reset_local
-#     export -f git_pull_latest
-#     export -f git_list_branches
-#     export -f git_new_branch
-#     export -f git_repo_size
-#     export -f git_user_stats
-#     export -f git_clone
-# fi
+export -f is_git_available
+export -f git_undo_commit
+export -f git_reset_local
+export -f git_pull_latest
+export -f git_list_branches
+export -f git_new_branch
+export -f git_repo_size
+export -f git_user_stats
+export -f git_clone
+export -f git_release_list

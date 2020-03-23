@@ -27,7 +27,7 @@ function file_exists() {
 function append_line_to_file() {
     if [[ $# != 2 ]]; then
         echo
-        echo "desc : adds a line to a file in case it hasn't already been added  "
+        echo "desc : adds a line to a file in case it hasn't already been added "
         echo
         echo "method usage: append_line_to_file [target file] [line]"
         echo
@@ -52,7 +52,7 @@ function add_to_bashrc() {
     fi
     source "$HOME/.bashrc"
     local payload="$1"
-    log_info "adding $payload to '\$HOME/.bashrc'"
+    log_info "adding $payload to '$HOME/.bashrc'"
     append_line_to_file "$HOME/.bashrc" "$payload"
     source "$HOME/.bashrc"
 }
@@ -79,6 +79,13 @@ function add_to_path() {
         exit 1
     fi
     local target_dir="$1"
-    add_profile_env_var "PATH" "\$PATH:$target_dir"
+    add_profile_env_var "PATH" "$PATH:$target_dir"
 }
-# cat array.sh |grep -Po '(?<=(function )).*(?= ())'
+export -f file_exists
+export -f get_file_name
+export -f get_file_dir
+export -f file_exists
+export -f append_line_to_file
+export -f add_to_bashrc
+export -f add_profile_env_var
+export -f add_to_path
