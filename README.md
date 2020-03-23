@@ -85,7 +85,10 @@ sudo wget -q -O \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt && \
 sudo chmod +x /usr/bin/fast-apt
 ```
-
+wget -q -O \
+    /usr/bin/fast-apt \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt && \
+chmod +x /usr/bin/fast-apt
 - `gitt`
 
 ```bash

@@ -580,7 +580,14 @@ function git_clone() {
         echo " out=$name.zip" >>"${download_list}"
     done
     if file_exists "${download_list}"; then
-        aria2c --continue=true --max-concurrent-downloads=16 --max-connection-per-server=16 --optimize-concurrent-downloads --connect-timeout=600 --timeout=600 --input-file="${download_list}"
+        aria2c \
+        --continue=true \
+        --max-concurrent-downloads=16 \
+        --max-connection-per-server=16 \
+        --optimize-concurrent-downloads \
+        --connect-timeout=600 \
+        --timeout=600 \
+        --input-file="${download_list}"
     fi
     for repo in "${repos[@]}"; do
         name=$(get_file_name "$repo")
