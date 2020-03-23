@@ -206,7 +206,6 @@ function init() {
 function fast_apt() {
     apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    apt_cleanup
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"
         local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")

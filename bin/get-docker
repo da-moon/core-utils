@@ -327,10 +327,8 @@ function init() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         aria2c \
-            --split=16 \
             --continue=true \
-            --max-concurrent-downloads=32 \
-            --min-split-size=1M \
+            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
@@ -364,10 +362,8 @@ function init() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            --split=16 \
             --continue=true \
-            --max-concurrent-downloads=32 \
-            --min-split-size=1M \
+            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
@@ -404,10 +400,8 @@ function docker_installer() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            --split=16 \
             --continue=true \
-            --max-concurrent-downloads=32 \
-            --min-split-size=1M \
+            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
