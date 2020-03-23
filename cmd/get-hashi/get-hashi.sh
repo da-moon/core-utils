@@ -28,7 +28,7 @@ echo "desc : downloads and installs lastes hashicorp software"
 echo
 echo "method usage: get_hashi [list of software name]"
 echo
-exit 1
+exit 1 
 fi
 [ "$(whoami)" = root ] || exec sudo "$0" "$@"
 local -r packages=("$@")

@@ -13,6 +13,10 @@ define relative_to_absolute
 $(realpath $1)
 endef
 
+define get_dirs
+$(subst $(1)/,, $(wildcard $(1)/*))
+endef
+
 define pathsearch
 $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
 endef

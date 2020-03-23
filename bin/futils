@@ -1,406 +1,88 @@
-#!/usr/bin/bash
-set -o errtrace
-set -o functrace
-set -o errexit
-set -o nounset
-set -o pipefail
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-function is_root() {
-    [ "$EUID" -eq 0 ]
-}
-function string_colorify() {
-    local -r input="$2"
-    # checking for colour availablity
-    ncolors=$(tput colors)
-    if [[ $ncolors -ge 8 ]]; then
-        local -r color_code="$1"
-        echo -e "\e[1m\e[$color_code"m"$input\e[0m"
-    else
-        echo -e "$input"
-    fi
-}
-function string_blue() {
-    local -r color_code="34"
-    local -r input="$1"
-    echo -e "$(string_colorify "${color_code}" "${input}")"
-}
-function string_yellow() {
-    local -r color_code="93"
-    local -r input="$1"
-    echo -e "$(string_colorify "${color_code}" "${input}")"
-}
-function string_green() {
-    local -r color_code="32"
-    local -r input="$1"
-    echo -e "$(string_colorify "${color_code}" "${input}")"
-}
-function string_red() {
-    local -r color_code="31"
-    local -r input="$1"
-    echo -e "$(string_colorify "${color_code}" "${input}")"
-}
-function log() {
-    local -r level="$1"
-    local -r message="$2"
-    local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    local -r script_name="$(basename "$0")"
-    local color
-    case "$level" in
-    INFO)
-        color="string_green"
-        ;;
-    WARN)
-        color="string_yellow"
-        ;;
-    ERROR)
-        color="string_red"
-        ;;
-    esac
-    echo >&2 -e "$(${color} "${timestamp} [${level}] ==>") $(string_blue "[$script_name]") ${message}"
-
-}
-function log_info() {
-    local -r message="$1"
-    log "INFO" "$message"
-}
-function log_warn() {
-    local -r message="$1"
-    log "WARN" "$message"
-}
-function log_error() {
-    local -r message="$1"
-    log "ERROR" "$message"
-}
-function file_exists() {
-    local -r file="$1"
-    [[ -f "$file" ]]
-}
-function os_command_is_available() {
-    local name
-    name="$1"
-    command -v "$name" >/dev/null
-}
-function has_sudo() {
-    os_command_is_available "sudo"
-}
-function has_apt() {
-    os_command_is_available "apt-get"
-}
-function has_parallel() {
-    os_command_is_available "parallel"
-}
-function is_pkg_installed() {
-    local -r pkg="$1"
-    dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
-}
-function confirm_sudo() {
-    if ! is_root; then
-        log_error "needs root permission to run.exiting..."
-        exit 1
-    fi
-    local target="sudo"
-    if ! is_pkg_installed "apt-utils"; then
-        log_info "apt-utils is not available ... installing now"
-        apt-get -qq update &&
-            DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
-    fi
-    if ! has_sudo; then
-        log_info "sudo is not available ... installing now"
-        apt-get -qq update &&
-            DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
-    fi
-}
-function string_strip_prefix() {
-    local -r str="$1"
-    local -r prefix="$2"
-    echo "${str#$prefix}"
-}
-function get_debian_codename() {
-    local -r os_release=$(cat /etc/os-release)
-    local -r version_codename_line=$(echo "$os_release" | grep -e VERSION_CODENAME)
-    local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
-    echo "$result"
-}
-function assert_not_empty() {
-    local -r arg_name="$1"
-    local -r arg_value="$2"
-    local -r reason="$3"
-    if [[ -z "$arg_value" ]]; then
-        log_error "'$arg_name' cannot be empty. $reason"
-        exit 1
-    fi
-}
-function append_line_to_file() {
-    if [[ $# != 2 ]]; then
-        echo
-        echo "desc : adds a line to a file in case it hasn't already been added  "
-        echo
-        echo "method usage: append_line_to_file [target file] [line]"
-        echo
-        exit 1
-    fi
-    local -r dest="$1"
-    local -r payload="$2"
-    assert_not_empty "file path" "$dest" "needs a file path to work"
-    assert_not_empty "line " "$payload" "needs a line to append to file"
-    if [[ -z $(grep "$payload" "$dest") ]]; then
-        echo "$payload" >>"$dest"
-    fi
-}
-function add_to_bashrc() {
-    if [[ $# != 1 ]]; then
-        echo
-        echo "desc : appends a line to .bashrc in case it hasn't been already added "
-        echo
-        echo "method usage: add_to_bashrc [line]"
-        echo
-        exit 1
-    fi
-    source "$HOME/.bashrc"
-    local payload="$1"
-    log_info "adding $payload to '\$HOME/.bashrc'"
-    append_line_to_file "$HOME/.bashrc" "$payload"
-    source "$HOME/.bashrc"
-}
-function add_profile_env_var() {
-    if [[ $# != 2 ]]; then
-        echo
-        echo "desc : adds and exports a variable to .bashrc "
-        echo
-        echo "method usage: add_profile_env_var [variable name] [variable value]"
-        echo
-        exit 1
-    fi
-    local key="$1"
-    local value="$2"
-    add_to_bashrc "export $key=$value"
-}
-function add_to_path() {
-    if [[ $# != 1 ]]; then
-        echo
-        echo "desc : adds a directory to path in case it hasn't been already added "
-        echo
-        echo "method usage: add_to_path [target directory]"
-        echo
-        exit 1
-    fi
-    local target_dir="$1"
-    add_profile_env_var "PATH" "\$PATH:$target_dir"
-}
-function add_key() {
-    if [[ $# == 0 ]]; then
-        log_error "No argument was passed to add_key method"
-        exit 1
-    fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    curl -fsSL "$1" | apt-key add -
-}
-function add_repo() {
-    if [[ $# != 2 ]]; then
-        echo
-        echo "desc : adds an apt repository"
-        echo
-        echo "method usage: add_repo [name] [address]"
-        echo
-        exit 1
-    fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    local -r dest="/etc/apt/sources.list.d/$1.list"
-    local -r addr="$2"
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    if file_exists "$dest"; then
-        log_warn "a repo source for $1 already exists. deleting the existing one..."
-        rm "$dest"
-    fi
-    log_info "adding repo for $1"
-    echo "$addr" | tee "$dest"
-    apt-get update
-}
-function apt_cleanup() {
-    confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    if file_exists "/tmp/apt-fast.list"; then
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
-        rm /tmp/apt-fast.list
-    fi
-    apt-get clean
-    # rm -rf /var/lib/apt/lists/*
-    rm -rf /var/cache/apt/archives/*
-}
-function filter_installed() {
-    local -r deps=("$@")
-    local -r raw_list=$(dpkg -s ${deps[@]} 2>&1)
-    local -r filtered=$(echo "${raw_list}" | grep -E "dpkg-query: package")
-    local -r trimmed=$(echo "${filtered}" | sed -n "s,[^']*'\([^']*\).*,\1,p")
-    echo "$trimmed"
-}
-function init() {
-    apt_cleanup
-    confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    DEBIAN_FRONTEND=noninteractive apt-get update
-    log_info "downloading and installing core dependancies"
-
-    if ! os_command_is_available "aria2c"; then
-        log_info "aria2 not available.installing aria2 ..."
-        DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
-    fi
-    if ! os_command_is_available "curl"; then
-        log_info "curl not available.installing aria2 ..."
-        DEBIAN_FRONTEND=noninteractive apt-get install -yqq curl
-    fi
-    if ! os_command_is_available "wget"; then
-        log_info "wget not available.installing wget ..."
-        DEBIAN_FRONTEND=noninteractive apt-get install -yqq wget
-    fi
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
-    if ! os_command_is_available "netselect-apt"; then
-        log_info "netselect-apt not available.installing netselect-apt ..."
-        pushd "/tmp/" >/dev/null 2>&1
-        rm -rf netselect*
-        echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
-        echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
-        aria2c \
-            --continue=true \
-            --max-concurrent-downloads=16 \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file=/tmp/netselect.list
-        dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
-        dpkg -i netselect-apt_0.3.ds1-28_all.deb
-        rm -rf netselect*
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-    fi
-    if ! file_exists "/etc/apt/sources-fast.list"; then
-        log_warn "fast apt sources have not been added. adding now ..."
-        netselect-apt \
-            --tests 15 \
-            --sources \
-            --nonfree \
-            --outfile /etc/apt/sources-fast.list \
-            stable
-    fi
-    deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
-        "make" "vim" "nano" "ca-certificates" "parallel"
-        "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
-        "apt-transport-https" "bzip2" "zip")
-    local -r not_installed=$(filter_installed "${deps[@]}")
-    for pkg in $not_installed; do
-        log_info "adding ${pkg} to install candidates"
-        apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
-    done
-    if file_exists "/tmp/apt-fast.list"; then
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        aria2c \
-            --continue=true \
-            --max-concurrent-downloads=16 \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file=/tmp/apt-fast.list
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        for pkg in $not_installed; do
-            log_info "installing $pkg"
-            sudo apt-get install -yqq "$pkg"
-        done
-        apt_cleanup
-    fi
-    if has_parallel; then
-        log_info "parallelizing env  ..."
-        env_parallel --install
-    fi
-}
+#!/usr/bin/env bash
+# Flattened ... do not modify 
 
 function help() {
-    echo
-    echo "Usage: [$(basename "$0")] [OPTIONAL FLAG] [COMMAND | COMMAND <FLAG> <ARG>]"
-    echo
-    echo
-    echo -e "[Synopsis]:\ta collection of file/folder operation helpers"
-    echo
-    echo -e "  r-md5\t\t\tRecursively generate md5 hashes in target dirs ."
-    echo -e "  [flag|optional]\t--dupes \tonly list duplicates.[DEFAULT: 'false']"
-    echo -e "  [flag|optional]\t--output <arg> \tTarget to store the list in.[DEFAULT: 'mdsums.list']"
-    echo -e "  [flag(s)|optional]\t--dir <arg> \tDirectories to search.[DEFAULT: '$PWD']"
-    echo
-    echo -e "  dedup\t\t\tRecursively finds duplicate files in directory by comparing them"
-    echo -e "\t\t\twith files in an origin directory ."
-    echo -e "  \t\t\tIt does not delete duplicates in origin directory"
-    echo -e "  [flag|optional]\t--output <arg> \tTarget to store the list of deleted files in."
-    echo -e "  [flag]\t\t--origin <arg> \torigin directory."
-    echo -e "  [flag(s)]\t\t--target <arg> \tdirectories to be deduplicated."
-    echo
-    echo
-    echo "Optional Flags:"
-    echo
-    echo -e "  --init\t\tinitializes and installs dependancies for $(basename "$0")"
-    echo -e "  --update\t\tupdates $(basename "$0") to the letest version at master branch."
-    echo
-    echo "Example:"
-    echo
-    echo "  sudo $(basename "$0") --init "
-    echo
+echo
+echo "Usage: [$(basename "$0")] [OPTIONAL FLAG] [COMMAND | COMMAND <FLAG> <ARG>]"
+echo
+echo
+echo -e "[Synopsis]:ta collection of file/folder operation helpers"
+echo
+echo -e " r-md5tttRecursively generate md5 hashes in target dirs ."
+echo -e " [flag|optional]t--dupes tonly list duplicates.[DEFAULT: 'false']"
+echo -e " [flag|optional]t--output <arg> tTarget to store the list in.[DEFAULT: 'mdsums.list']"
+echo -e " [flag(s)|optional]t--dir <arg> tDirectories to search.[DEFAULT: '$PWD']"
+echo
+echo -e " deduptttRecursively finds duplicate files in directory by comparing them"
+echo -e "tttwith files in an origin directory ."
+echo -e " tttIt does not delete duplicates in origin directory"
+echo -e " [flag|optional]t--output <arg> tTarget to store the list of deleted files in."
+echo -e " [flag]tt--origin <arg> torigin directory."
+echo -e " [flag(s)]tt--target <arg> tdirectories to be deduplicated."
+echo
+echo
+echo "Optional Flags:"
+echo
+echo -e " --initttinitializes and installs dependancies for $(basename "$0")"
+echo -e " --updatettupdates $(basename "$0") to the letest version at master branch."
+echo
+echo "Example:"
+echo
+echo " sudo $(basename "$0") --init "
+echo
 }
-
 function update() {
-    local -r url="https://raw.githubusercontent.com/da-moon/core-utils/master/bin/$(basename "$0")"
-    local -r install_location=$(whereis "$(basename "$0")" | grep -E -o "$(basename "$0").*" | cut -f2- -d: | tr -s ' ' | cut -d ' ' -f2)
-    log_info "updating $(basename "$0") located at $install_location"
-    if [ ! -w "$install_location" ]; then
-        log_info "needs sudo for updating file at $install_location"
-        confirm_sudo
-        [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    fi
-    log_info "removing old file at $install_location"
-    rm "$install_location"
-    log_info "downloading $url"
-    wget -q -O "$install_location" "$url"
-    log_info "setting $install_location as executable"
-    chmod +x "$install_location"
+local -r url="https://raw.githubusercontent.com/da-moon/core-utils/master/bin/$(basename "$0")"
+local -r install_location=$(whereis "$(basename "$0")" | grep -E -o "$(basename "$0").*" | cut -f2- -d: | tr -s ' ' | cut -d ' ' -f2)
+log_info "updating $(basename "$0") located at $install_location"
+if [ ! -w "$install_location" ]; then
+log_info "needs sudo for updating file at $install_location"
+confirm_sudo
+[ "$(whoami)" = root ] || exec sudo "$0" "$@"
+fi
+log_info "removing old file at $install_location"
+rm "$install_location"
+log_info "downloading $url"
+wget -q -O "$install_location" "$url"
+log_info "setting $install_location as executable"
+chmod +x "$install_location"
 }
 function main() {
-    if [[ $# == 0 ]]; then
-        help
-        exit
-    fi
-    while [[ $# -gt 0 ]]; do
-        local key="$1"
-
-        case "$key" in
-        --init)
-            log_info "initializing futils"
-            init
-            shift
-            ;;
-        --update)
-            update
-            shift
-            ;;
-        --help)
-            help
-            exit
-            ;;
-        *)
-            log_error "Unrecognized option: $key"
-            echo -e "\t\t\t\tRun '$(basename "$0") --help' for a list of known subcommands." >&2
-            exit 1
-            ;;
-        esac
-        shift
-    done
+if [[ $# == 0 ]]; then
+help
+exit
+fi
+while [[ $# -gt 0 ]]; do
+local key="$1"
+case "$key" in
+--init)
+log_info "initializing futils"
+init
+shift
+;;
+--update)
+update
+shift
+;;
+--help)
+help
+exit
+;;
+*)
+log_error "Unrecognized option: $key"
+echo -e "ttttRun '$(basename "$0") --help' for a list of known subcommands." >&2
+exit 1
+;;
+esac
+shift
+done
 }
 if [ -n ${BASH_SOURCE+x} ]; then
-    main "${@}"
-    exit $?
+main "${@}"
+exit $?
 fi
 if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
 else
-    main "${@}"
-    exit $?
-fi
+main "${@}"
+exit $?
+fi 
