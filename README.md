@@ -79,7 +79,7 @@ the following commands assumes you either have `wget` installed
 - `fast-apt`
 
 ```bash
-sudo rm /usr/bin/fast-apt && \
+sudo rm -f /usr/bin/fast-apt && \
 sudo wget -q -O \
     /usr/bin/fast-apt \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt && \

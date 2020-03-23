@@ -13,9 +13,8 @@ function fast_apt() {
         # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
+            -j 16
             --continue=true \
-            --max-concurrent-downloads=16 \
-            --max-connection-per-server=16 \
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
