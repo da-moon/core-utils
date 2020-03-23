@@ -54,7 +54,7 @@ function string_colorify() {
     ncolors=$(tput colors)
     if [[ $ncolors -ge 8 ]]; then
         local -r color_code="$1"
-        echo -e "e[1me[$color_code"m"$inpute[0m"
+        echo -e "\e[1m\e[$color_code"m"$input\e[0m"
     else
         echo -e "$input"
     fi
