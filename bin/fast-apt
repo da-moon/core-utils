@@ -219,7 +219,6 @@ function fast_apt() {
         # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-            --split=16 \
             --max-concurrent-downloads=32 \
             --continue=true \
             --min-split-size=1M \
