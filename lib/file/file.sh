@@ -11,7 +11,6 @@ function file_exists() {
     local -r file="$1"
     [[ -f "$file" ]]
 }
-
 function get_file_name() {
     local -r target="$1"
     echo "${target##*/}"
@@ -82,3 +81,4 @@ function add_to_path() {
     local target_dir="$1"
     add_profile_env_var "PATH" "\$PATH:$target_dir"
 }
+# cat array.sh |grep -Po '(?<=(function )).*(?= ())'

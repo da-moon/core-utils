@@ -743,3 +743,9 @@ fi
 list=("https://github.com/jbruchon/jdupes "
     "https://github.com/openssl/openssl"
     "https://github.com/protocolbuffers/protobuf")
+name=array.sh
+functions=($(grep function "$name" |
+    cut -d '(' -f 1 |
+    cut -d ' ' -f 2))
+for i in "$functions"; do echo "export -f $i" >>new-file; done
+
