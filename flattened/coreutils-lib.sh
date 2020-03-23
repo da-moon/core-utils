@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+# Flattened ... do not modify 
 function array_contains() {
     local -r needle="$1"
     shift
@@ -9,7 +11,7 @@ function array_contains() {
         fi
     done
     return 1
-}
+} 
 # https://stackoverflow.com/a/15988793/2308858
 function array_split() {
     local -r separator="$1"
