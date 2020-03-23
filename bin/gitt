@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 set -o errtrace
 set -o functrace
 set -o errexit
@@ -94,7 +94,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! $(is_root); then
+    if ! is_root; then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -104,7 +104,7 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! $(has_sudo); then
+    if ! has_sudo; then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
@@ -419,7 +419,7 @@ function git_new_branch() {
         echo
         exit 1
     fi
-    local -r name = "$1"
+    local -r name="$1"
     assert_not_empty "name" "$name" "branch name is needed"
     git checkout -b "$name"
 }
@@ -469,7 +469,7 @@ function git_clone() {
     fi
     for repo in "${repos[@]}"; do
         assert_not_empty "repo" "$repo" "repo url cannot be empty"
-        name=$(get_file_name $repo)
+        name=$(get_file_name "$repo")
         if file_exists "$PWD/$name.zip"; then
             log_warn "an exisitng clone of repositry archive exists.deleting..."
             rm "$PWD/$name.zip"
@@ -491,7 +491,7 @@ function git_clone() {
             --input-file="${download_list}"
     fi
     for repo in "${repos[@]}"; do
-        name=$(get_file_name $repo)
+        name=$(get_file_name "$repo")
         if file_exists "$PWD/$name.zip"; then
             extract "$PWD/$name.zip" "$name"
             mv "$PWD/$name/$name-master" "$PWD"
@@ -513,7 +513,7 @@ function git_release_list() {
     fi
     local -r owner="$1"
     local -r repo="$2"
-    local -r reply=$(curl -sL https://api.github.com/repos/${owner}/${repo}/tags)
+    local -r reply=$(curl -sL "https://api.github.com/repos/${owner}/${repo}/tags")
     local -r versions=$(echo "${reply}" | jq -r '.[].name')
     local -r sorted=$(echo "${versions}" | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n)
     local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')

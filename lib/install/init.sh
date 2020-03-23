@@ -1,14 +1,12 @@
 #!/usr/bin/bash
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
-
 function init() {
     apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     DEBIAN_FRONTEND=noninteractive apt-get update
     log_info "downloading and installing core dependancies"
-
     if ! os_command_is_available "aria2c"; then
         log_info "aria2 not available.installing aria2 ..."
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2

@@ -1,10 +1,8 @@
 #!/usr/bin/bash
-
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 # shellcheck source=./lib/extract/extract.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/extract/extract.sh"
-
 # package functions
 function is_git_available() {
     if ! os_command_is_available "git"; then
@@ -24,7 +22,6 @@ function git_reset_local() {
 function git_pull_latest() {
     is_git_available
     git pull --rebase origin master
-
 }
 function git_list_branches() {
     is_git_available
@@ -40,13 +37,12 @@ function git_new_branch() {
         echo
         exit 1
     fi
-    local -r name = "$1"
+    local -r name="$1"
     assert_not_empty "name" "$name" "branch name is needed"
     git checkout -b "$name"
 }
 function git_repo_size() {
     is_git_available
-
     # do not show output of git bundle create {>/dev/null 2>&1} ...
     git bundle create .tmp-git-bundle --all >/dev/null 2>&1
     # check for existance of du
@@ -90,7 +86,7 @@ function git_clone() {
     fi
     for repo in "${repos[@]}"; do
         assert_not_empty "repo" "$repo" "repo url cannot be empty"
-        name=$(get_file_name $repo)
+        name=$(get_file_name "$repo")
         if file_exists "$PWD/$name.zip"; then
             log_warn "an exisitng clone of repositry archive exists.deleting..."
             rm "$PWD/$name.zip"
@@ -105,7 +101,7 @@ function git_clone() {
         aria2c --continue=true --max-concurrent-downloads=16 --max-connection-per-server=16 --optimize-concurrent-downloads --connect-timeout=600 --timeout=600 --input-file="${download_list}"
     fi
     for repo in "${repos[@]}"; do
-        name=$(get_file_name $repo)
+        name=$(get_file_name "$repo")
         if file_exists "$PWD/$name.zip"; then
             extract "$PWD/$name.zip" "$name"
             mv "$PWD/$name/$name-master" "$PWD"
@@ -114,7 +110,6 @@ function git_clone() {
             rm "$PWD/$name.zip"
         fi
     done
-
 }
 function git_release_list() {
     if [[ $# != 2 ]]; then
@@ -127,7 +122,7 @@ function git_release_list() {
     fi
     local -r owner="$1"
     local -r repo="$2"
-    local -r reply=$(curl -sL https://api.github.com/repos/${owner}/${repo}/tags)
+    local -r reply=$(curl -sL "https://api.github.com/repos/${owner}/${repo}/tags")
     local -r versions=$(echo "${reply}" | jq -r '.[].name')
     local -r sorted=$(echo "${versions}" | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n)
     local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')

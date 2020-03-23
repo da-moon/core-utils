@@ -1,12 +1,10 @@
 #!/usr/bin/bash
-
 # shellcheck source=./lib/env/env.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/env/env.sh"
 # shellcheck source=./lib/log/log.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/log/log.sh"
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
-
 # "extract <file> [path]" "extract any given archive"
 function extract() {
     if ! os_command_is_installed "unzip"; then
@@ -29,7 +27,6 @@ function extract() {
             *.tar) mkdir -p "${1%.tar}" && tar xf "$1" -C "${1%.tar}"/ ;;
             *.tbz2) mkdir -p "${1%.tbz2}" && tar xjf "$1" -C "${1%.tbz2}"/ ;;
             *.tgz) mkdir -p "${1%.tgz}" && tar xzf "$1" -C "${1%.tgz}"/ ;;
-
             *.zip)
                 if ! os_command_is_installed "unzip"; then
                     log_error "unzip is not available. existing..."

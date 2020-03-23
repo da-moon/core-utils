@@ -1,5 +1,4 @@
 #!/usr/bin/bash
-
 # shellcheck source=./lib/env/env.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/env/env.sh"
 # shellcheck source=./lib/log/log.sh
@@ -8,11 +7,9 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/log/log.sh"
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/file/file.sh"
 # shellcheck source=./lib/string/string.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/string/string.sh"
-
 function is_root() {
     [ "$EUID" == 0 ]
 }
-
 function os_command_is_available() {
     local name
     name="$1"
@@ -32,7 +29,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! $(is_root); then
+    if ! is_root; then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -42,7 +39,7 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! $(has_sudo); then
+    if ! has_sudo; then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 set -o errtrace
 set -o functrace
 set -o errexit
@@ -91,7 +91,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! $(is_root); then
+    if ! is_root; then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -101,7 +101,7 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! $(has_sudo); then
+    if ! has_sudo; then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
@@ -391,7 +391,7 @@ function docker_installer() {
     log_info "adding yarn apt repo key"
     add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
     add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    for pkg in $packages; do
+    for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
@@ -409,7 +409,7 @@ function docker_installer() {
             --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
-        for pkg in $packages; do
+        for pkg in "${packages[@]}"; do
             log_info "installing $pkg"
             sudo apt-get install -yqq "$pkg"
         done

@@ -1,13 +1,10 @@
 #!/usr/bin/bash
-
 # Return true (0) if the first string contains the second string
 function string_contains() {
     local -r haystack="$1"
     local -r needle="$2"
-
     [[ "$haystack" == *"$needle"* ]]
 }
-
 # Returns true (0) if the first string (assumed to contain multiple lines)
 # contains the second string (needle).
 # The needle can contain regular expressions.
@@ -16,7 +13,6 @@ function string_multiline_contains() {
     local -r needle="$2"
     echo "$haystack" | grep -q "$needle"
 }
-
 # Convert the given string to uppercase
 function string_to_uppercase() {
     local -r str="$1"
@@ -30,7 +26,6 @@ function string_strip_prefix() {
     local -r prefix="$2"
     echo "${str#$prefix}"
 }
-
 # eg:
 # string_strip_suffix "foo=bar" "=bar" ===> "foo"
 # string_strip_suffix "foo=bar" "=*" ===> "foo"
@@ -39,7 +34,6 @@ function string_strip_suffix() {
     local -r suffix="$2"
     echo "${str%$suffix}"
 }
-
 # Return true if the given response is empty or "null"
 # "null" is from jq parsing.
 function string_is_empty_or_null() {
@@ -58,7 +52,6 @@ function string_colorify() {
         echo -e "$input"
     fi
 }
-
 function string_blue() {
     local -r color_code="34"
     local -r input="$1"
@@ -69,13 +62,11 @@ function string_yellow() {
     local -r input="$1"
     echo -e "$(string_colorify "${color_code}" "${input}")"
 }
-
 function string_green() {
     local -r color_code="32"
     local -r input="$1"
     echo -e "$(string_colorify "${color_code}" "${input}")"
 }
-
 function string_red() {
     local -r color_code="31"
     local -r input="$1"

@@ -1,10 +1,8 @@
 #!/usr/bin/bash
-
 # shellcheck source=./lib/env/env.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/env/env.sh"
 # shellcheck source=./lib/string/string.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/string/string.sh"
-
 function log() {
     local -r level="$1"
     local -r message="$2"
@@ -24,7 +22,6 @@ function log() {
     esac
     # echo >&2 -e "$(string_colorify "${color}" "${timestamp} [${level}] ==>") $(string_blue "[$script_name]") ${message}"
     echo >&2 -e "$(${color} "${timestamp} [${level}] ==>") $(string_blue "[$script_name]") ${message}"
-
 }
 function log_info() {
     local -r message="$1"

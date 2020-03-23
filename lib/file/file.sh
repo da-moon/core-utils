@@ -1,17 +1,14 @@
 #!/usr/bin/bash
-
 # shellcheck source=./lib/env/env.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/env/env.sh"
 # shellcheck source=./lib/log/log.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/log/log.sh"
 # shellcheck source=./lib/string/string.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/string/string.sh"
-
 function file_exists() {
     local -r file="$1"
     [[ -f "$file" ]]
 }
-
 function get_file_name() {
     local -r target="$1"
     echo "${target##*/}"
@@ -20,7 +17,6 @@ function get_file_dir() {
     local -r target="$1"
     echo "${target%/*}"
 }
-
 function file_exists() {
     local -r file="$1"
     [[ -f "$file" ]]

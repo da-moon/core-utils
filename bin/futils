@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 set -o errtrace
 set -o functrace
 set -o errexit
@@ -94,7 +94,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! $(is_root); then
+    if ! is_root; then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -104,7 +104,7 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! $(has_sudo); then
+    if ! has_sudo; then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"

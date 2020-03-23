@@ -60,7 +60,7 @@ extension and add the following to `$PWD/.vscode/settings.json`
 }
 ```
 
-after this, every time you save a file with `#!/usr/bin/env bash` shebang, it would run shell check on all
+after this, every time you save a file with `#!/usr/bin/bash` shebang, it would run shell check on all
 workspace files that had the shebang.
 
 - [ ] `get-protobuf` : installs latest version of protobuf compiler.

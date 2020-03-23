@@ -43,13 +43,13 @@ function array_prepend() {
 export -f array_contains
 export -f array_split
 export -f array_join
-export -f array_prepend
+export -f array_prepend 
 set -o errtrace
 set -o functrace
 set -o errexit
 set -o nounset
 set -o pipefail
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }' 
 # "extract <file> [path]" "extract any given archive"
 function extract() {
     if ! os_command_is_installed "unzip"; then
@@ -114,7 +114,7 @@ function extract() {
         log_error "$1 cannot be extracted."
     fi
 }
-export -f extract
+export -f extract 
 function file_exists() {
     local -r file="$1"
     [[ -f "$file" ]]
@@ -195,7 +195,7 @@ export -f file_exists
 export -f append_line_to_file
 export -f add_to_bashrc
 export -f add_profile_env_var
-export -f add_to_path
+export -f add_to_path 
 # package functions
 function is_git_available() {
     if ! os_command_is_available "git"; then
@@ -230,7 +230,7 @@ function git_new_branch() {
         echo
         exit 1
     fi
-    local -r name = "$1"
+    local -r name="$1"
     assert_not_empty "name" "$name" "branch name is needed"
     git checkout -b "$name"
 }
@@ -279,7 +279,7 @@ function git_clone() {
     fi
     for repo in "${repos[@]}"; do
         assert_not_empty "repo" "$repo" "repo url cannot be empty"
-        name=$(get_file_name $repo)
+        name=$(get_file_name "$repo")
         if file_exists "$PWD/$name.zip"; then
             log_warn "an exisitng clone of repositry archive exists.deleting..."
             rm "$PWD/$name.zip"
@@ -294,7 +294,7 @@ function git_clone() {
         aria2c --continue=true --max-concurrent-downloads=16 --max-connection-per-server=16 --optimize-concurrent-downloads --connect-timeout=600 --timeout=600 --input-file="${download_list}"
     fi
     for repo in "${repos[@]}"; do
-        name=$(get_file_name $repo)
+        name=$(get_file_name "$repo")
         if file_exists "$PWD/$name.zip"; then
             extract "$PWD/$name.zip" "$name"
             mv "$PWD/$name/$name-master" "$PWD"
@@ -315,7 +315,7 @@ function git_release_list() {
     fi
     local -r owner="$1"
     local -r repo="$2"
-    local -r reply=$(curl -sL https://api.github.com/repos/${owner}/${repo}/tags)
+    local -r reply=$(curl -sL "https://api.github.com/repos/${owner}/${repo}/tags")
     local -r versions=$(echo "${reply}" | jq -r '.[].name')
     local -r sorted=$(echo "${versions}" | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n)
     local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')
@@ -331,7 +331,7 @@ export -f git_new_branch
 export -f git_repo_size
 export -f git_user_stats
 export -f git_clone
-export -f git_release_list
+export -f git_release_list 
 function ffmpeg_installer() {
     apt_cleanup
     confirm_sudo
@@ -340,7 +340,7 @@ function ffmpeg_installer() {
     log_info "adding mkvtoolnix apt repo key"
     add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
     add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
-    for pkg in $packages; do
+    for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>/tmp/apt-fast.list
@@ -351,7 +351,7 @@ function ffmpeg_installer() {
         aria2c --continue=true --max-concurrent-downloads=16 --max-connection-per-server=16 --optimize-concurrent-downloads --connect-timeout=600 --timeout=600 --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
-        for pkg in $packages; do
+        for pkg in "${packages[@]}"; do
             log_info "installing $pkg"
             sudo apt-get install -yqq "$pkg"
         done
@@ -362,7 +362,7 @@ function ffmpeg_installer() {
         npm install --global ffmpeg-progressbar-cli
     fi
 }
-export -f ffmpeg_installer
+export -f ffmpeg_installer 
 function init() {
     apt_cleanup
     confirm_sudo
@@ -425,7 +425,7 @@ function init() {
         env_parallel --install
     fi
 }
-export -f init
+export -f init 
 # end of shared base
 function node_installer() {
     apt_cleanup
@@ -438,7 +438,7 @@ function node_installer() {
     log_info "adding yarn apt repo key"
     add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
     add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    for pkg in $packages; do
+    for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>/tmp/apt-fast.list
@@ -449,7 +449,7 @@ function node_installer() {
         aria2c --continue=true --max-concurrent-downloads=16 --max-connection-per-server=16 --optimize-concurrent-downloads --connect-timeout=600 --timeout=600 --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
-        for pkg in $packages; do
+        for pkg in "${packages[@]}"; do
             log_info "installing $pkg"
             sudo apt-get install -yqq "$pkg"
         done
@@ -460,7 +460,7 @@ function node_installer() {
         add_to_path '${home}/.yarn/bin'
     fi
 }
-export -f node_installer
+export -f node_installer 
 function log() {
     local -r level="$1"
     local -r message="$2"
@@ -496,7 +496,7 @@ function log_error() {
 export -f log
 export -f log_info
 export -f log_warn
-export -f log_error
+export -f log_error 
 function is_root() {
     [ "$EUID" == 0 ]
 }
@@ -519,7 +519,7 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! $(is_root); then
+    if ! is_root; then
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
@@ -529,7 +529,7 @@ function confirm_sudo() {
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy apt-utils
     fi
-    if ! $(has_sudo); then
+    if ! has_sudo; then
         log_info "sudo is not available ... installing now"
         apt-get -qq update &&
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
@@ -607,7 +607,7 @@ export -f add_key
 export -f add_repo
 export -f apt_cleanup
 export -f filter_installed
-export -f assert_is_installed
+export -f assert_is_installed 
 # Return true (0) if the first string contains the second string
 function string_contains() {
     local -r haystack="$1"
@@ -701,4 +701,4 @@ export -f string_blue
 export -f string_yellow
 export -f string_green
 export -f string_red
-export -f assert_not_empty
+export -f assert_not_empty 
