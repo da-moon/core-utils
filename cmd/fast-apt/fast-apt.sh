@@ -15,7 +15,6 @@ function fast_apt() {
         aria2c \
             -j 16
             --continue=true \
-            --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
             --input-file=/tmp/apt-fast.list
