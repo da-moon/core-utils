@@ -224,11 +224,7 @@ function apt_cleanup() {
         rm /tmp/apt-fast.list
     fi
     apt-get clean
-<<<<<<< HEAD
     # rm -rf /var/lib/apt/lists/*
-=======
-    rm -rf /var/lib/apt/lists/*
->>>>>>> parent of 402a165... apt cleanup do not remove apt/lists
     rm -rf /var/cache/apt/archives/*
 }
 function filter_installed() {
