@@ -11,9 +11,14 @@ function fast_apt() {
         echo "$uri" >>/tmp/apt-fast.list
         # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        downloader="aria2c -j 16 --continue=true --connect-timeout=600 --timeout=600 --max-connection-per-server=16 --input-file=/tmp/apt-fast.list"
-        log_info "downloader string -> $downloader"
-        $downloader 
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
