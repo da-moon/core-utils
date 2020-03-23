@@ -708,16 +708,12 @@ function fast_apt() {
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"
         local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
-        log_info "uri -> $uri"
         echo "$uri" >>/tmp/apt-fast.list
         # init
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        aria2c \
-            -j 16
-            --continue=true \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file=/tmp/apt-fast.list
+        downloader="aria2c -j 16 --continue=true --connect-timeout=600 --timeout=600 --max-connection-per-server=16 --input-file=/tmp/apt-fast.list"
+        log_info "downloader string -> $downloader"
+        $downloader 
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
