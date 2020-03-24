@@ -4,7 +4,6 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 function init() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    DEBIAN_FRONTEND=noninteractive apt-get update -qq
     if ! os_command_is_available "aria2c"; then
         log_info "aria2 not available.installing aria2 ..."
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
@@ -46,6 +45,7 @@ function init() {
             --nonfree \
             --outfile /etc/apt/sources-fast.list \
             stable
+        DEBIAN_FRONTEND=noninteractive apt-get update -qq
     fi
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
         "make" "vim" "nano" "ca-certificates" "parallel"
@@ -57,21 +57,23 @@ function init() {
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^\']+" >>/tmp/apt-fast.list
     done
-    pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-    aria2c \
-        -j 16 \
-        --continue=true \
-        --max-connection-per-server=16 \
-        --optimize-concurrent-downloads \
-        --connect-timeout=600 \
-        --timeout=600 \
-        --input-file=/tmp/apt-fast.list
-    [[ "$?" != 0 ]] && popd
-    popd >/dev/null 2>&1
-    for pkg in $not_installed; do
-        log_info "installing $pkg"
-        sudo apt-get install -yqq "$pkg"
-    done
+    if  file_exists "/tmp/apt-fast.list"; then
+        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+            aria2c \
+                -j 16 \
+                --continue=true \
+                --max-connection-per-server=16 \
+                --optimize-concurrent-downloads \
+                --connect-timeout=600 \
+                --timeout=600 \
+                --input-file=/tmp/apt-fast.list
+            for pkg in $not_installed; do
+                log_info "installing $pkg"
+                sudo apt-get install -yqq "$pkg"
+            done
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+    fi
     if has_parallel; then
         log_info "parallelizing env ..."
         env_parallel --install
