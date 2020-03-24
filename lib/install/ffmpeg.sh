@@ -8,7 +8,7 @@ function ffmpeg_installer() {
     local -r download_list="/tmp/apt-fast.list"
     log_info "adding mkvtoolnix apt repo key"
     add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
-    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
+    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |

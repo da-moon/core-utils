@@ -386,6 +386,13 @@ function get_debian_codename() {
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
+function get_distro_name() {
+    local -r os_release=$(cat /etc/os-release)
+    local -r trimmed=$(echo "$os_release" | grep -v VERSION_ID | grep -v ID_LIKE)
+    local -r version_codename_line=$(echo "$trimmed" | grep -e ID)
+    local -r result=$(string_strip_prefix "$version_codename_line" "ID=")
+    echo "$result"
+}
 function add_key() {
     if [[ $# == 0 ]]; then
         log_error "No argument was passed to add_key method"
@@ -471,7 +478,8 @@ export -f min_bash_version
 export -f arch_probe
 export -f user_exists
 export -f new_user_as_sudo
-export -f os_name 
+export -f os_name
+export -f get_distro_name 
 # "extract <file> [path]" "extract any given archive"
 function extract() {
     if ! os_command_is_available "unzip"; then
@@ -822,7 +830,7 @@ function ffmpeg_installer() {
     local -r download_list="/tmp/apt-fast.list"
     log_info "adding mkvtoolnix apt repo key"
     add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
-    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
+    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
@@ -855,8 +863,8 @@ function docker_installer() {
     fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
-    add_key "https://download.docker.com/linux/debian/gpg"
-    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
+    add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
+    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     local -r download_list="/tmp/apt-fast.list"
     for pkg in "${packages[@]}"; do
@@ -997,8 +1005,8 @@ function docker_installer() {
     fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
-    add_key "https://download.docker.com/linux/debian/gpg"
-    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
+    add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
+    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     local -r download_list="/tmp/apt-fast.list"
     for pkg in "${packages[@]}"; do
