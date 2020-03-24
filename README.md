@@ -1,6 +1,13 @@
 # Core-Utils
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io#https://github.com/da-moon/core-utils)
+<p align="center">
+  <a href="https://gitpod.io#https://github.com/da-moon/core-utils">
+    <img src="https://img.shields.io/badge/open%20in-gitpod-blue?logo=gitpod" alt="Open In GitPod">
+  </a>
+  <img src="https://img.shields.io/github/languages/code-size/da-moon/core-utils" alt="GitHub code size in bytes">
+  <img src="https://img.shields.io/github/commit-activity/w/da-moon/core-utils" alt="GitHub commit activity">
+  <img src="https://img.shields.io/github/last-commit/da-moon/core-utils/master" alt="GitHub last commit">
+</p>
 
 ## Outline
 

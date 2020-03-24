@@ -96,6 +96,7 @@ function downloader() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
+            --min-split-size=1M \
             --input-file=$download_list"
     $downloader
 }
