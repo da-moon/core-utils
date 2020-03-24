@@ -76,7 +76,7 @@ function add_to_path() {
         exit 1
     fi
     local target_dir="$1"
-    add_profile_env_var "PATH" "$PATH:$target_dir"
+    add_profile_env_var "PATH" '$PATH':"$target_dir"
 }
 function downloader() {
     if [[ $# != 1 ]]; then
