@@ -954,6 +954,9 @@ function go_installer() {
     echo "${url}" >>"${download_list}"
     echo " dir=${download_dir}" >>"${download_list}"
     echo " out=${file_name}" >>"${download_list}"
+    if file_exists "${download_list}"; then
+        downloader "$download_list"
+    fi
     local -r go_root="$root_dir/go"
     log_info "removing any existing installations at $go_root"
     rm -rf "$go_root" 
