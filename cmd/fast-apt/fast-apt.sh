@@ -5,7 +5,6 @@ source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)l
 function fast_apt() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
-        log_info "getting uris for $@"
         local -r download_list="/tmp/apt-fast.list"
         apt-get -y --print-uris "$@" |
             grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
