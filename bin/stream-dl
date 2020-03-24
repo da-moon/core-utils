@@ -772,7 +772,12 @@ function init() {
         env_parallel --install
     fi
 }
-export -f init 
+export -f init
+bash_version="5"
+if ! min_bash_version "$bash_version"; then
+    log_error "you bash version is ${BASH_VERSINFO}.Minimum supported version is $bash_version"
+    exit 1
+fi 
 # end of shared base
 function node_installer() {
     confirm_sudo
