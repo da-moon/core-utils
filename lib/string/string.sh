@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 # Return true (0) if the first string contains the second string
 function string_contains() {
     local -r haystack="$1"

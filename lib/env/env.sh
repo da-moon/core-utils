@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 set -o errtrace
 set -o functrace
 set -o errexit
