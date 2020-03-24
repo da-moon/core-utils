@@ -52,7 +52,6 @@ function init() {
         "ca-certificates"
         "wget" 
         "jq" 
-        "unzip"
         "apt-transport-https" 
         "parallel"
         "gcc"

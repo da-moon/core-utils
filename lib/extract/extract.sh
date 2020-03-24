@@ -7,7 +7,7 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/log/log.sh"
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 # "extract <file> [path]" "extract any given archive"
 function extract() {
-    if ! os_command_is_installed "unzip"; then
+    if ! os_command_is_available "unzip"; then
         log_error "unzip is not available. existing..."
         exit 1
     fi
@@ -16,7 +16,7 @@ function extract() {
             case "$1" in
             *.rar)
                 rar x "$1" "${1%.rar}"/
-                if ! os_command_is_installed "rar"; then
+                if ! os_command_is_available "rar"; then
                     log_error "rar is not available. existing..."
                     exit 1
                 fi
@@ -28,7 +28,7 @@ function extract() {
             *.tbz2) mkdir -p "${1%.tbz2}" && tar xjf "$1" -C "${1%.tbz2}"/ ;;
             *.tgz) mkdir -p "${1%.tgz}" && tar xzf "$1" -C "${1%.tgz}"/ ;;
             *.zip)
-                if ! os_command_is_installed "unzip"; then
+                if ! os_command_is_available "unzip"; then
                     log_error "unzip is not available. existing..."
                     exit 1
                 fi
@@ -41,7 +41,7 @@ function extract() {
         else
             case "$1" in
             *.rar)
-                if ! os_command_is_installed "rar"; then
+                if ! os_command_is_available "rar"; then
                     log_error "rar is not available. existing..."
                     exit 1
                 fi
@@ -54,7 +54,7 @@ function extract() {
             *.tbz2) mkdir -p "$2" && tar xjf "$1" -C "$2" ;;
             *.tgz) mkdir -p "$2" && tar xzf "$1" -C "$2" ;;
             *.zip)
-                if ! os_command_is_installed "unzip"; then
+                if ! os_command_is_available "unzip"; then
                     log_error "unzip is not available. existing..."
                     exit 1
                 fi

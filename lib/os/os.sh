@@ -111,7 +111,7 @@ function filter_installed() {
 }
 function assert_is_installed() {
     local -r name="$1"
-    if ! os_command_is_installed "$name"; then
+    if ! os_command_is_available "$name"; then
         log_error "'$name' is required but cannot be found in the system's PATH."
         exit 1
     fi
