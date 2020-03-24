@@ -728,7 +728,7 @@ function fast_apt() {
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"
         local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
-        # init
+        local -r links="/tmp/apt-fast.list"
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
             -j 16 \
@@ -737,7 +737,7 @@ function fast_apt() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file=/tmp/apt-fast.list
+            --input-file="$links"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
