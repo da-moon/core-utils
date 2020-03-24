@@ -133,6 +133,16 @@ sudo wget -q -O \
 sudo chmod +x /usr/bin/get-docker
 ```
 
+- `get-go`
+
+```bash
+sudo rm -f /usr/bin/get-go && \
+sudo wget -q -O \
+    /usr/bin/get-go \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-go && \
+sudo chmod +x /usr/bin/get-go
+```
+
 - `run-sc`
 
 ```bash
@@ -169,6 +179,13 @@ curl -fsSL \
 ```bash
 curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-docker | sudo bash -s -- 
+```
+
+- `get-docker` : the following installs `docker` and lastes version of `docker-compose`
+
+```bash
+curl -fsSL \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-go | sudo bash -s -- 
 ```
 
 ## issues

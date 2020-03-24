@@ -1101,16 +1101,16 @@ export -f get_hashi_latest_version
 export -f get_hashi 
 if [ -z "${BASH_SOURCE+x}" ]; then
     init
-    compose_version=$(get_latest_release_from_git "docker" "compose") 
-    log_info "started docker and docker-compose ${compose_version} installation"
-    docker_installer "$compose_version"
+    version=$(get_go_latest_version) 
+    log_info "started go toolchain ${version} installation"
+    go_installer "$version"
     exit $?
 else
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         init
-        compose_version=$(get_latest_release_from_git "docker" "compose") 
-        log_info "started docker and docker-compose ${compose_version} installation"
-        docker_installer "$compose_version"
+        version=$(get_go_latest_version) 
+        log_info "started go toolchain ${version} installation"
+        go_installer "$version"
         exit $?
     fi
 fi 
