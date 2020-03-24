@@ -47,33 +47,15 @@ function init() {
             stable
         DEBIAN_FRONTEND=noninteractive apt-get update
     fi
-    deps=("git" 
-    "apt-utils" 
-    "unzip" 
-    "build-essential" 
-    "software-properties-common" 
-    "make" 
-    "vim" 
-    "nano" 
-    "ca-certificates" 
-    "parallel" 
-    "wget" 
-    "gcc" 
-    "g++" 
-    "jq" 
-    "unzip" 
-    "ufw" 
-    "tmux" 
-    "apt-transport-https" 
-    "bzip2" 
-    "zip")
-    local -r links="/tmp/apt-fast.list"
-    local -r not_installed=($(filter_installed "${deps[@]}"))
-    log_info "missing core dependanices ${not_installed[@]}"
-    for pkg in ${not_installed[@]}; do
+      deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
+        "make" "vim" "nano" "ca-certificates"
+        "wget" "jq" "unzip"
+        "apt-transport-https" "bzip2" "zip")
+    local -r not_installed=$(filter_installed "${deps[@]}")
+    for pkg in $not_installed; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >> "$links"
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$links"
     done
     if  file_exists "$links"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
@@ -84,7 +66,7 @@ function init() {
                 --optimize-concurrent-downloads \
                 --connect-timeout=600 \
                 --timeout=600 \
-                --input-file=$links
+                --input-file="$links"
             for pkg in ${not_installed[@]}; do
                 log_info "installing $pkg"
                 sudo apt-get install -yqq "$pkg"
