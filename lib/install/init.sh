@@ -51,9 +51,9 @@ function init() {
         "make" "vim" "nano" "ca-certificates" "parallel"
         "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
         "apt-transport-https" "bzip2" "zip")
-    local -r not_installed=$(filter_installed "${deps[@]}")
+    local -r not_installed=($(filter_installed "${deps[@]}"))
     log_info "about to start installing missing core dependancies : ${not_installed[@]}"
-    for pkg in $not_installed; do
+    for pkg in ${not_installed[@]}; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>/tmp/apt-fast.list
@@ -70,7 +70,7 @@ function init() {
             --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
-        for pkg in $not_installed; do
+        for pkg in ${not_installed[@]}; do
             log_info "installing $pkg"
             sudo apt-get install -yqq "$pkg"
         done
