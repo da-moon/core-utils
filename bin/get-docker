@@ -977,26 +977,28 @@ function get_hashi() {
     local -r packages=("$@")
     local -r download_list="/tmp/hashistack.list"
     rm -f "${download_list}"
+    mkdir -p "/tmp/get-hashi/"
     for name in "${packages[@]}"; do
         log_info "adding ${name}"
-        rm -f "/tmp/${name}"*
+        rm -rf "/tmp/get-hashi/${name}"*
         local version
         local url
         version=$(get_hashi_latest_version "${name}")
         log_info "adding ${name} version ${version} to download-list ${download_list}"
         url="https://releases.hashicorp.com/${name}/${version}/${name}_${version}_linux_amd64.zip"
         echo "${url}" >>"${download_list}"
+        echo " dir=/tmp/get-hashi/" >>"${download_list}"
         echo " out=${name}.zip" >>"${download_list}"
     done
     if file_exists "${download_list}"; then
-        pushd "/tmp/" >/dev/null 2>&1
+        pushd "/tmp/get-hashi/" >/dev/null 2>&1
         downloader "$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
     fi
     local -r install_dir="/usr/bin/"
     for name in "${packages[@]}"; do
-        extract "/tmp/${name}.zip" "$install_dir"
+        extract "/tmp/get-hashi/${name}.zip" "$install_dir"
         mkdir -p "/etc/${name}/" "/var/${name}/"
         mkdir -p "/etc/${name}/" "/var/${name}/"
         chmod -R 0600 "/etc/${name}/" "/var/${name}/"
@@ -1008,7 +1010,7 @@ function get_hashi() {
             setcap cap_ipc_lock=+ep /usr/bin/vault
         fi
         chmod +x "${install_dir}/${name}"
-        rm "/tmp/${name}.zip"
+        rm -rf "/tmp/get-hashi/${name}.zip"
         # confirming install was successful
         # breaks gitpod build at the moment
         # $name --version >/dev/null
