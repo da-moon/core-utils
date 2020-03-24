@@ -45,6 +45,16 @@ function confirm_sudo() {
             DEBIAN_FRONTEND=noninteractive apt-get install -qqy "$target"
     fi
 }
+function arch_probe(){
+    echo $(uname -m)
+}
+function os_name(){
+    echo "$(uname -s | tr "[:upper:]" "[:lower:]")" 
+}
+function min_bash_version() {
+    local -r ver="$1"
+	[ "${BASH_VERSINFO:-0}" -ge $((ver)) ]
+}
 function get_debian_codename() {
     local -r os_release=$(cat /etc/os-release)
     local -r version_codename_line=$(echo "$os_release" | grep -e VERSION_CODENAME)
@@ -106,6 +116,20 @@ function assert_is_installed() {
         exit 1
     fi
 }
+function user_exists() {
+    local -r user="$1"
+    getent passwd ${user}  > /dev/null
+}
+function new_user_as_sudo() {
+    local -r user="$1"
+    [ "`whoami`" = root ] || exec sudo "$0" "$@"
+    if ! $(user_exists "${user}");then
+        log_info "creating user ${user}"
+        useradd -l -u 33333 -G sudo \
+        -md "/home/${user}" \
+        -s  /bin/bash -p "${user}" "${user}" 
+    fi
+}
 export -f is_root
 export -f os_command_is_available
 export -f has_sudo
@@ -119,3 +143,8 @@ export -f add_repo
 export -f apt_cleanup
 export -f filter_installed
 export -f assert_is_installed
+export -f min_bash_version
+export -f arch_probe
+export -f user_exists
+export -f new_user_as_sudo
+export -f os_name
