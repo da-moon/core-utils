@@ -20,5 +20,5 @@ RUN echo 'export PATH="/workspace/core-utils/bin:$PATH"' >>~/.bashrc
 # RUN wget -q -O /usr/bin/gitt https://raw.githubusercontent.com/da-moon/core-utils/master/bin/gitt
 # RUN chmod +x "/usr/bin/gitt"
 # RUN gitt --init
-RUN echo 'alias make=\'make -j$(nproc)\'' >>~/.bashrc
+RUN echo 'alias make=''make -j$(nproc)''' >>~/.bashrc
 CMD ["bash"] 
