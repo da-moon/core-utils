@@ -43,12 +43,13 @@ function init() {
         log_warn "fast apt sources have not been added. adding now ..."
         netselect-apt --tests 15 --sources --nonfree --outfile /etc/apt/sources-fast.list stable
     fi
+    log_info "about to start installing core dependancies"
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
         "make" "vim" "nano" "ca-certificates" "parallel"
         "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
         "apt-transport-https" "bzip2" "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
-    for pkg in $not_installed; do
+    for pkg in ${not_installed[@]}; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>/tmp/apt-fast.list
@@ -64,7 +65,7 @@ function init() {
             --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
-        for pkg in $not_installed; do
+        for pkg in ${not_installed[@]}; do
             log_info "installing $pkg"
             sudo apt-get install -yqq "$pkg"
         done
