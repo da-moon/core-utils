@@ -989,7 +989,7 @@ function get_hashi() {
         log_info "adding ${name} version ${version} to download-list ${download_list}"
         url="https://releases.hashicorp.com/${name}/${version}/${name}_${version}_linux_amd64.zip"
         echo "${url}" >>"${download_list}"
-        echo " dir=/tmp/get-hashi/" >>"${download_list}"
+        echo " dir=/tmp/get-hashi" >>"${download_list}"
         echo " out=${name}.zip" >>"${download_list}"
     done
     if file_exists "${download_list}"; then
