@@ -57,6 +57,7 @@ function init() {
         "gcc"
         "g++"
         "ufw"
+        "progress"
         "bzip2"
         "tmux"
         "zip")
