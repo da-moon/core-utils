@@ -13,6 +13,8 @@ SELF_DIR := $(dir $(THIS_FILE))
 LIBS = lib/env/env.sh lib/string/string.sh lib/log/log.sh 
 LIBS += lib/array/array.sh lib/array/array.sh lib/file/file.sh   
 LIBS += lib/os/os.sh lib/extract/extract.sh lib/git/git.sh lib/install/init.sh
+LIBS += lib/install/node.sh lib/install/ffmpeg.sh lib/install/docker.sh lib/install/go.sh
+LIBS += lib/install/cpp.sh lib/install/openssl.sh lib/install/vscode.sh lib/install/java.sh
 
 EXT=sh
 FLATTENED_NAME=coreutils-lib

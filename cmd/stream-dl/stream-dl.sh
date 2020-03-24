@@ -100,6 +100,7 @@ function main() {
             shift
             ;;
         *)
+        # @todo: check for currect number of args
             m3u8_downloader "${@}"
             exit $?
             ;;
