@@ -59,7 +59,7 @@ function docker_installer() {
 
 if [ -z "${BASH_SOURCE+x}" ]; then
     init
-    local -r compose_version=$(get_latest_release_from_git "docker" "compose") 
+    compose_version=$(get_latest_release_from_git "docker" "compose") 
     log_info "started docker and docker-compose ${compose_version} installation"
     docker_installer "$compose_version"
     exit $?
@@ -68,7 +68,7 @@ else
         export -f docker_installer
     else
         init
-        local -r compose_version=$(get_latest_release_from_git "docker" "compose") 
+        compose_version=$(get_latest_release_from_git "docker" "compose") 
         log_info "started docker and docker-compose ${compose_version} installation"
         docker_installer "$compose_version"
         exit $?
