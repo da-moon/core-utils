@@ -7,10 +7,10 @@ function fast_apt() {
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"
         local -r download_list="/tmp/apt-fast.list"
-        local -r uri=$(apt-get -y --print-uris $@ | grep -o -E "(ht|f)t(p|ps)://[^\']+")
-        echo "${uri[@]}" >> "$download_list"
+        apt-get -y --print-uris install "$@" |
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        downloader "$download_list"
+            downloader "$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
