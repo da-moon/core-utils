@@ -851,6 +851,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/debian/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
+    local -r download_list="/tmp/apt-fast.list"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
@@ -905,6 +906,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/debian/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
+    local -r download_list="/tmp/apt-fast.list"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
