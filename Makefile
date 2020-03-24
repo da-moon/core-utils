@@ -72,6 +72,7 @@ $(BUILD_TARGETS):$(FLATTEN_TARGETS)
 	- $(eval curr_file = $(PWD)/flattened/$(name)_temp.${EXT})
 	- $(call append_to_file,$(output),$(call read_file_content,$(curr_file)))	
 	- $(RM) flattened/$(name)_temp.${EXT}
+	- chmod +x $(output)
 	- $(call print_completed_target)
 $(FLATTEN_TARGETS): 
 	- $(call print_running_target)
