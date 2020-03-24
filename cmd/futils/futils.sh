@@ -82,7 +82,7 @@ function main() {
         shift
     done
 }
-if [ -n ${BASH_SOURCE+x} ]; then
+if [ -n "${BASH_SOURCE+x}" ]; then
     main "${@}"
     exit $?
 fi

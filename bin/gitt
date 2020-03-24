@@ -661,6 +661,22 @@ function git_release_list() {
     local -r trimmed=$(echo "${sorted}" | grep -v -E 'beta|master|pre|rc|test')
     echo "$trimmed"
 }
+function get_latest_release_from_git() {
+    if [[ $# != 2 ]]; then
+        echo
+        echo "desc : gets latest release from git"
+        echo
+        echo "method usage: get_latest_release_from_git [repo owner] [repo name]"
+        echo
+        exit 1
+    fi
+    local -r repo_owner="$1"
+    local -r repo_name="$2"
+    local -r reply=$(curl -sL https://api.github.com/repos/${repo_owner}/${repo_name}/releases/latest)
+    local -r latest=$(echo "$reply" | jq -r '.tag_name')
+    echo "$latest"
+}
+export -f get_latest_release_from_git
 export -f is_git_available
 export -f git_undo_commit
 export -f git_reset_local
@@ -953,7 +969,7 @@ function main() {
         shift
     done
 }
-if [ -n ${BASH_SOURCE+x} ]; then
+if [ -n "${BASH_SOURCE+x}" ]; then
     main "${@}"
     exit $?
 fi

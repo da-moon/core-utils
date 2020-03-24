@@ -71,7 +71,7 @@ function get_hashi() {
         # $name --version >/dev/null
     done
 }
-if [ -n ${BASH_SOURCE+x} ]; then
+if [ -n "${BASH_SOURCE+x}" ]; then
     install_deps
     stack=("vault" "consul" "nomad" "terraform" "packer")
     if [[ "$#" != 0 ]]; then
