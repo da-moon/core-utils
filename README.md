@@ -85,13 +85,11 @@ sudo wget -q -O \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt && \
 sudo chmod +x /usr/bin/fast-apt
 ```
-wget -q -O \
-    /usr/bin/fast-apt \
-    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt && \
-chmod +x /usr/bin/fast-apt
+
 - `gitt`
 
 ```bash
+sudo rm -f /usr/bin/gitt && \
 sudo wget -q -O \
     /usr/bin/gitt \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/gitt && \
@@ -101,6 +99,7 @@ sudo chmod +x /usr/bin/gitt
 - `stream-dl`
 
 ```bash
+sudo rm -f /usr/bin/stream-dl && \
 sudo wget -q -O \
     /usr/bin/stream-dl \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/stream-dl && \
@@ -110,6 +109,7 @@ sudo chmod +x /usr/bin/stream-dl
 - `get-hashi`
 
 ```bash
+sudo rm -f /usr/bin/get-hashi && \
 sudo wget -q -O \
     /usr/bin/get-hashi \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-hashi && \
@@ -119,6 +119,7 @@ sudo chmod +x /usr/bin/get-hashi
 - `run-sc`
 
 ```bash
+sudo rm -f /usr/bin/run-sc && \
 sudo wget -q -O \
     /usr/bin/run-sc \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/run-sc && \
