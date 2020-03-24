@@ -211,7 +211,7 @@ if [ -n "${BASH_SOURCE+x}" ]; then
     main "${@}"
     exit $?
 fi
-if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
+if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     main "${@}"
     exit $?
 fi

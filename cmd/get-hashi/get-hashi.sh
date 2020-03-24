@@ -82,7 +82,7 @@ if [ -n "${BASH_SOURCE+x}" ]; then
     get_hashi "${stack[@]}"
     exit $?
 fi
-if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
+if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     init
     stack=("vault" "consul" "nomad" "terraform" "packer")
     if [[ "$#" != 0 ]]; then
