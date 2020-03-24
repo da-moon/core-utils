@@ -99,13 +99,13 @@ function git_clone() {
     done
     if file_exists "${download_list}"; then
         aria2c \
-        --continue=true \
-        --max-concurrent-downloads=16 \
-        --max-connection-per-server=16 \
-        --optimize-concurrent-downloads \
-        --connect-timeout=600 \
-        --timeout=600 \
-        --input-file="${download_list}"
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file="${download_list}"
     fi
     for repo in "${repos[@]}"; do
         name=$(get_file_name "$repo")

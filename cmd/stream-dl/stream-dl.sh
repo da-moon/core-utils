@@ -25,15 +25,23 @@ function m3u8_downloader() {
     for i in $(grep -Ev '#EXT' ${playlist_file}); do
         echo "${stream_root}/${i}" >>"${links}"
     done
-    aria2c -i "${links}" \
-        --continue=true \
-        --max-concurrent-downloads=16 \
-        --max-connection-per-server=16 \
-        --optimize-concurrent-downloads \
-        [[ "$?" != 0 ]] && popd
+    if file_exists "${links}"; then
+        aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=${links}
+    fi
+    [[ "$?" != 0 ]] && popd
     popd >/dev/null 2>&1
-    ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy "${name}.mkv"
-    rm -rf "${chunks_dir}/${name}"
+    if file_exists "${chunks_dir}/${name}/${playlist_file}"; then
+        ffmpeg-bar -nostdin -allowed_extensions ALL -i "${chunks_dir}/${name}/${playlist_file}" -c copy "${name}.mkv"
+        rm -rf "${chunks_dir}/${name}"
+    fi
+
 }
 function update() {
     local -r url="https://raw.githubusercontent.com/da-moon/core-utils/master/bin/$(basename "$0")"

@@ -18,13 +18,13 @@ function ffmpeg_installer() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
-        --continue=true \
-        --max-concurrent-downloads=16 \
-        --max-connection-per-server=16 \
-        --optimize-concurrent-downloads \
-        --connect-timeout=600 \
-        --timeout=600 \
-        --input-file=/tmp/apt-fast.list
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do
