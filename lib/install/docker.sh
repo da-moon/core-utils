@@ -3,10 +3,6 @@
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/git/git.sh"
-if [ -n "${BASH_SOURCE+x}" ]; then
-    main "${@}"
-    exit $?
-fi
 
 function docker_installer() {
     confirm_sudo

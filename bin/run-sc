@@ -835,10 +835,6 @@ function ffmpeg_installer() {
     fi
 }
 export -f ffmpeg_installer 
-if [ -n "${BASH_SOURCE+x}" ]; then
-    main "${@}"
-    exit $?
-fi
 function docker_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
