@@ -79,5 +79,5 @@ function go_installer() {
     log_info "cleaning up $go_archive"
     rm -rf "$go_archive"
 }
-export -f install_go
+export -f go_installer
 export -f get_go_latest_version
