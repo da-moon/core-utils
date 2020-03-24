@@ -30,6 +30,7 @@ helps with recursively generating a list of md5hashes in a list of given directo
 - [x] `stream-dl` : uses `aria2` to download a `m3u8` stream (based on given url) and uses ffmpeg to convert it to mkv.
 links passed to `stream-dl` must point to `m3u8` main plainlist file. to download multiple streams (multiple playlists),
 store the links into a file (eg, `linx`) and run the following 
+    - [ ] `yarn installation` : breaks when addding to path...
 
 ```bash
 while IFS='|' read -r url name;do stream-dl "$name" "$url" < /dev/null ; done <linx
