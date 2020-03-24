@@ -15,6 +15,7 @@ LIBS += lib/array/array.sh lib/array/array.sh lib/file/file.sh
 LIBS += lib/os/os.sh lib/extract/extract.sh lib/git/git.sh lib/install/init.sh
 LIBS += lib/install/node.sh lib/install/ffmpeg.sh lib/install/docker.sh lib/install/go.sh
 LIBS += lib/install/cpp.sh lib/install/openssl.sh lib/install/vscode.sh lib/install/java.sh
+LIBS += lib/install/docker.sh lib/install/hashicorp.sh 
 
 EXT=sh
 FLATTENED_NAME=coreutils-lib

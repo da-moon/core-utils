@@ -893,6 +893,129 @@ function docker_installer() {
     sudo chmod +x "$compose_path"
 }
 export -f docker_installer 
+function docker_installer() {
+    confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    local compose_version=$(get_latest_release_from_git "docker" "compose") 
+    if [[ $# == 1 ]]; then
+        compose_version="$1"
+    fi
+    log_info "started procedure for docker/docker-compose"
+    log_info "adding docker apt repo key"
+    add_key "https://download.docker.com/linux/debian/gpg"
+    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
+    local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
+    for pkg in "${packages[@]}"; do
+        log_info "adding ${pkg} to install candidates"
+        apt-get -y --print-uris install "$pkg" |
+            grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$download_list"
+    done
+        if file_exists "$download_list"; then
+        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+        downloader "$download_list"
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+        for pkg in "${packages[@]}"; do
+            log_info "installing $pkg"
+            sudo apt-get install -yqq "$pkg"
+        done
+        apt_cleanup
+    fi
+    if os_command_is_available "docker"; then
+        log_info "making docker directories"
+        mkdir -p "$HOME/.docker"
+        mkdir -p "$HOME/.local/share/applications/"
+        mkdir -p "$HOME/.local/bin"
+        log_info "adding docker image and transferring setting docker folder permission"
+        if [[  -n "${USER+x}" ]]; then
+                newgrp docker
+                usermod -aG docker "$USER"
+                chown "$USER":"$USER" "/home/$USER/.docker" -R
+                chmod g+rwx "$HOME/.docker" -R
+        fi
+        if os_command_is_available "systemctl"; then
+            log_info "enabling docker service"
+            systemctl enable docker
+        fi
+    fi
+    local -r url="https://github.com/docker/compose/releases/download/"$compose_version"/docker-compose-$(uname -s)-$(uname -m)"
+    local -r compose_path="/usr/local/bin/docker-compose"
+    log_info "installing docker-compose version $compose_version with url $url"
+    curl \
+        -L "$url" \
+        -o "$compose_path" && \
+    sudo chmod +x "$compose_path"
+}
+export -f docker_installer 
+function get_hashi_latest_version() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : gets latest version of a hashicorp software"
+        echo
+        echo "method usage: get_hashi_latest_version [software name]"
+        echo
+        exit 1
+    fi
+    assert_not_empty "get_hashi_latest_version" "$1" "user input is needed"
+    local -r reply=$(curl -sL "https://releases.hashicorp.com/${1}/index.json")
+    local -r versions=$(echo "$reply" | jq -r '.versions[].version')
+    local -r sorted=$(echo "$versions" | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n)
+    local -r trimmed=$(echo "$sorted" | grep -E -v 'ent|rc|beta')
+    local -r latest=$(echo "$trimmed" | tail -1)
+    echo "$latest"
+}
+function get_hashi() {
+    if [[ $# == 0 ]]; then
+        echo
+        echo "desc : downloads and installs lastes hashicorp software"
+        echo
+        echo "method usage: get_hashi [list of software name]"
+        echo
+        exit 1
+    fi
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    local -r packages=("$@")
+    local -r download_list="/tmp/hashistack.list"
+    rm -f "${download_list}"
+    for name in "${packages[@]}"; do
+        log_info "adding ${name}"
+        rm -f "/tmp/${name}"*
+        local version
+        local url
+        version=$(get_hashi_latest_version "${name}")
+        log_info "adding ${name} version ${version} to download-list ${download_list}"
+        url="https://releases.hashicorp.com/${name}/${version}/${name}_${version}_linux_amd64.zip"
+        echo "${url}" >>"${download_list}"
+        echo " out=${name}.zip" >>"${download_list}"
+    done
+    if file_exists "${download_list}"; then
+        pushd "/tmp/" >/dev/null 2>&1
+        downloader "$download_list"
+        [[ "$?" != 0 ]] && popd
+        popd >/dev/null 2>&1
+    fi
+    local -r install_dir="/usr/bin/"
+    for name in "${packages[@]}"; do
+        extract "/tmp/${name}.zip" "$install_dir"
+        mkdir -p "/etc/${name}/" "/var/${name}/"
+        mkdir -p "/etc/${name}/" "/var/${name}/"
+        chmod -R 0600 "/etc/${name}/" "/var/${name}/"
+        chmod 0750 "/usr/bin/${name}"
+        # fails gitpod build
+        # @todo fix this
+        # chown "${USER}:${USER}" "/usr/bin/${name}"
+        if [[ "$name" == "vault" ]]; then
+            setcap cap_ipc_lock=+ep /usr/bin/vault
+        fi
+        chmod +x "${install_dir}/${name}"
+        rm "/tmp/${name}.zip"
+        # confirming install was successful
+        # breaks gitpod build at the moment
+        # $name --version >/dev/null
+    done
+}
+export -f get_hashi_latest_version
+export -f get_hashi 
 if [ -z "${BASH_SOURCE+x}" ]; then
     init
     stack=("vault" "consul" "nomad" "terraform" "packer")
