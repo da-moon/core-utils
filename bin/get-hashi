@@ -385,13 +385,13 @@ function add_repo() {
 function apt_cleanup() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    if file_exists "/tmp/apt-fast.list"; then
+    local -r links="/tmp/apt-fast.list"
+    if file_exists "$links"; then
         DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
-        rm /tmp/apt-fast.list
+        rm "$links"
     fi
     apt-get clean
-    # rm -rf /var/lib/apt/lists/apt.llvm.org_disco_dists_llvm-toolchain-disco_InRelease /var/lib/apt/lists/apt.llvm.org_disco_dists_llvm-toolchain-disco_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-backports_InRelease /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-backports_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-backports_universe_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_InRelease /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_multiverse_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_restricted_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco_universe_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_InRelease /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_multiverse_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_restricted_binary-amd64_Packages.lz4 /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_disco-updates_universe_binary-amd64_Packages.lz4 /var/lib/apt/lists/auxfiles /var/lib/apt/lists/lock /var/lib/apt/lists/mkvtoolnix.download_debian_dists_buster_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/mkvtoolnix.download_debian_dists_buster_Release /var/lib/apt/lists/mkvtoolnix.download_debian_dists_buster_Release.gpg /var/lib/apt/lists/partial /var/lib/apt/lists/ppa.launchpad.net_git-core_ppa_ubuntu_dists_disco_InRelease /var/lib/apt/lists/ppa.launchpad.net_git-core_ppa_ubuntu_dists_disco_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_InRelease /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_multiverse_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_restricted_binary-amd64_Packages.lz4 /var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_disco-security_universe_binary-amd64_Packages.lz4
-    rm -rf /var/cache/apt/archives/lock /var/cache/apt/archives/partial
+    rm -rf /var/cache/apt/archives/*
 }
 function filter_installed() {
     local -r deps=("$@")
@@ -691,7 +691,6 @@ function init() {
         "g++"
         "ufw"
         "bzip2"
-        "ufw"
         "tmux"
         "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")

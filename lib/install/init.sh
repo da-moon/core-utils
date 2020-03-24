@@ -65,7 +65,6 @@ function init() {
         "g++"
         "ufw"
         "bzip2"
-        "ufw"
         "tmux"
         "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")

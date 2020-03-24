@@ -3,11 +3,11 @@
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 # end of shared base
 function node_installer() {
-    apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     # script specific packages
     local -r packages=("nodejs" "yarn")
+    local -r links="/tmp/apt-fast.list"
     log_info "running NodeSource Node.js 12.x installer script"
     curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
     log_info "adding yarn apt repo key"
@@ -16,10 +16,10 @@ function node_installer() {
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^']+" >>/tmp/apt-fast.list
+            grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$links"
     done
     # End of scriptspecific packages
-    if file_exists "/tmp/apt-fast.list"; then
+    if file_exists "$links"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
             -j 16 \
@@ -28,7 +28,7 @@ function node_installer() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file=/tmp/apt-fast.list
+            --input-file="$links"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do
