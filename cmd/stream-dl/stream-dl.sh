@@ -8,32 +8,25 @@ source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)l
 
 function m3u8_downloader() {
     local -r playlist_file="index.m3u8"
-    local -r links="linx"
+    local -r download_list="linx"
     local -r chunks_dir="/tmp/stream-dl-chunks"
     local -r name="$1"
     local -r url="$2"
     local -r stream_root=${url%/*}
     mkdir -p "${chunks_dir}/${name}"
     pushd "${chunks_dir}/${name}" >/dev/null 2>&1
-    if file_exists "${links}"; then
-        rm "${links}"
+    if file_exists "$download_list"; then
+        rm "$download_list"
     fi
     if file_exists "${playlist_file}"; then
         rm "${playlist_file}"
     fi
     wget -qnc "${url}" -O "${playlist_file}"
     for i in $(grep -Ev '#EXT' ${playlist_file}); do
-        echo "${stream_root}/${i}" >>"${links}"
+        echo "${stream_root}/${i}" >>"$download_list"
     done
-    if file_exists "${links}"; then
-        aria2c \
-            -j 16 \
-            --continue=true \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file=${links}
+    if file_exists "$download_list"; then
+        downloader "$download_list"
     fi
     [[ "$?" != 0 ]] && popd
     popd >/dev/null 2>&1

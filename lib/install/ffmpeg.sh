@@ -17,14 +17,7 @@ function ffmpeg_installer() {
     # End of scriptspecific packages
     if file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        aria2c \
-            -j 16 \
-            --continue=true \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file="$download_list"
+        downloader "$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do
