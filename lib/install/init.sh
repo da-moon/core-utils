@@ -60,6 +60,10 @@ function init() {
         "jq" 
         "unzip"
         "apt-transport-https" 
+        "parallel"
+        "gcc"
+        "g++"
+        "ufw"
         "bzip2" 
         "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
