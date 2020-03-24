@@ -181,7 +181,7 @@ curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-docker | sudo bash -s -- 
 ```
 
-- `get-docker` : the following installs `docker` and lastes version of `docker-compose`
+- `get-go` : the following installs latest version of go toolchain.
 
 ```bash
 curl -fsSL \

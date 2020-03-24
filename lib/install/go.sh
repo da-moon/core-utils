@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
+# shellcheck source=./lib/extract/extract.sh
+source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/extract/extract.sh"
+
 function get_go_latest_version() {
     local -r reply=$(curl -sL https://golang.org/dl/?mode=json)
     local -r versions=$(echo "$reply" | jq -r '.[].version')
@@ -47,12 +50,16 @@ function go_installer() {
     local -r download_dir="/tmp/go_tmp_$uuid"
     mkdir -p "$download_dir"
     local -r go_archive="$download_dir/$file_name"
+    local -r download_list="/tmp/go-lang.list"
+    rm -f "${download_list}"
     log_info "about to download go version $version for os $os and arch $arch"
     if file_exists "$go_archive"; then
         log_warn "$go_archive has already been downloaded. deleting the existing one..."
         rm "$go_archive"
     fi
-    download "$url" "$go_archive"
+    echo "${url}" >>"${download_list}"
+    echo " dir=${download_dir}" >>"${download_list}"
+    echo " out=${file_name}" >>"${download_list}"
     local -r go_root="$root_dir/go"
     log_info "removing any existing installations at $go_root"
     rm -rf "$go_root" 
@@ -78,6 +85,7 @@ function go_installer() {
     go version
     log_info "cleaning up $go_archive"
     rm -rf "$go_archive"
+    rm -f "${download_list}"
 }
 export -f go_installer
 export -f get_go_latest_version
