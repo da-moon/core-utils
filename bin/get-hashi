@@ -944,6 +944,7 @@ function get_hashi() {
         chmod -R 0600 "/etc/${name}/" "/var/${name}/"
         chmod 0750 "/usr/bin/${name}"
         # fails gitpod build
+        # @todo fix this
         # chown "${USER}:${USER}" "/usr/bin/${name}"
         if [[ "$name" == "vault" ]]; then
             setcap cap_ipc_lock=+ep /usr/bin/vault
