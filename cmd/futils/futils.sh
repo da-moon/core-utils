@@ -82,11 +82,13 @@ function main() {
         shift
     done
 }
-if [ -n "${BASH_SOURCE+x}" ]; then
+
+if [ -z "${BASH_SOURCE+x}" ]; then
     main "${@}"
     exit $?
-fi
-if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-    main "${@}"
-    exit $?
+else
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        main "${@}"
+        exit $?
+    fi
 fi

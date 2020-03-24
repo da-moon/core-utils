@@ -86,17 +86,13 @@ function main() {
 }
 
 if [ -z "${BASH_SOURCE+x}" ]; then
-    echo "1 true" 
+    main "${@}"
+    exit $?
 else
-    echo "1 false"
+    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+        export -f fast_apt
+    else
+        main "${@}"
+        exit $?
+    fi
 fi
-
-# if [ -n "${BASH_SOURCE+x}" ]; then
-#     main "${@}"
-#     exit $?
-# fi
-# if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-#     export -f fast_apt
-#     main "${@}"
-#     exit $?
-# fi

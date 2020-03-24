@@ -72,7 +72,8 @@ function get_hashi() {
         # $name --version >/dev/null
     done
 }
-if [ -n "${BASH_SOURCE+x}" ]; then
+
+if [ -z "${BASH_SOURCE+x}" ]; then
     init
     stack=("vault" "consul" "nomad" "terraform" "packer")
     if [[ "$#" != 0 ]]; then
@@ -81,14 +82,18 @@ if [ -n "${BASH_SOURCE+x}" ]; then
     log_info "install targets ${stack[*]}"
     get_hashi "${stack[@]}"
     exit $?
-fi
-if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
-    init
-    stack=("vault" "consul" "nomad" "terraform" "packer")
-    if [[ "$#" != 0 ]]; then
-        stack=("${@}")
+else
+    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+        export -f get_hashi_latest_version
+        export -f get_hashi
+    else
+        init
+        stack=("vault" "consul" "nomad" "terraform" "packer")
+        if [[ "$#" != 0 ]]; then
+            stack=("${@}")
+        fi
+        log_info "install targets ${stack[*]}"
+        get_hashi "${stack[@]}"
+        exit $?
     fi
-    log_info "install targets ${stack[*]}"
-    get_hashi "${stack[@]}"
-    exit $?
 fi

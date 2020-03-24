@@ -79,7 +79,15 @@ function main() {
     fi
     run_shellcheck "$format" "${check_files[@]}"
 }
-if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
+
+if [ -z "${BASH_SOURCE+x}" ]; then
     main "${@}"
-    exit "$?"
+    exit $?
+else
+    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+        export -f run_shellcheck
+    else
+        main "${@}"
+        exit $?
+    fi
 fi

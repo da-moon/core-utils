@@ -871,11 +871,11 @@ function docker_installer() {
         mkdir -p "$HOME/.local/share/applications/"
         mkdir -p "$HOME/.local/bin"
         log_info "adding docker image and transferring setting docker folder permission"
-        if [  -z "${BASH_SOURCE+x}" ]; then
-            newgrp docker
-            usermod -aG docker "$USER"
-            chown "$USER":"$USER" "/home/$USER/.docker" -R
-            chmod g+rwx "$HOME/.docker" -R
+        if [[  -n "${USER+x}" ]]; then
+                newgrp docker
+                usermod -aG docker "$USER"
+                chown "$USER":"$USER" "/home/$USER/.docker" -R
+                chmod g+rwx "$HOME/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"
@@ -962,7 +962,14 @@ function main() {
     fi
     run_shellcheck "$format" "${check_files[@]}"
 }
-if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
+if [ -z "${BASH_SOURCE+x}" ]; then
     main "${@}"
-    exit "$?"
+    exit $?
+else
+    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+        export -f run_shellcheck
+    else
+        main "${@}"
+        exit $?
+    fi
 fi 
