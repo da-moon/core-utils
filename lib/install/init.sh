@@ -64,9 +64,12 @@ function init() {
         "gcc"
         "g++"
         "ufw"
-        "bzip2" 
+        "bzip2"
+        "ufw"
+        "tmux"
         "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
+    local -r links="/tmp/apt-fast.list"
     for pkg in $not_installed; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
