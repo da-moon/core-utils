@@ -842,7 +842,10 @@ export -f ffmpeg_installer
 function docker_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    compose_version="$1"
+    local compose_version=$(get_latest_release_from_git "docker" "compose") 
+    if [[ $# == 1 ]]; then
+        compose_version="$1"
+    fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
     add_key "https://download.docker.com/linux/debian/gpg"
@@ -889,6 +892,7 @@ function docker_installer() {
         -o "$compose_path" && \
     sudo chmod +x "$compose_path"
 }
+export -f docker_installer 
 if [ -z "${BASH_SOURCE+x}" ]; then
     init
     compose_version=$(get_latest_release_from_git "docker" "compose") 
@@ -896,9 +900,7 @@ if [ -z "${BASH_SOURCE+x}" ]; then
     docker_installer "$compose_version"
     exit $?
 else
-    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-        export -f docker_installer
-    else
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         init
         compose_version=$(get_latest_release_from_git "docker" "compose") 
         log_info "started docker and docker-compose ${compose_version} installation"
