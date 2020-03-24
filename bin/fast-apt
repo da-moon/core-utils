@@ -301,6 +301,18 @@ function add_to_path() {
     local target_dir="$1"
     add_profile_env_var "PATH" "$PATH:$target_dir"
 }
+function downloader() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : uses aria2 to download links in a file "
+        echo
+        echo "method usage: downloader [file path containing links]"
+        echo
+        exit 1
+    fi
+    local target_dir="$1"
+    add_profile_env_var "PATH" "$PATH:$target_dir"
+}
 export -f file_exists
 export -f get_file_name
 export -f get_file_dir
@@ -308,7 +320,8 @@ export -f file_exists
 export -f append_line_to_file
 export -f add_to_bashrc
 export -f add_profile_env_var
-export -f add_to_path 
+export -f add_to_path
+export -f downloader 
 function is_root() {
     [ "$EUID" == 0 ]
 }
@@ -385,10 +398,10 @@ function add_repo() {
 function apt_cleanup() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    local -r links="/tmp/apt-fast.list"
-    if file_exists "$links"; then
+    local -r download_list="/tmp/apt-fast.list"
+    if file_exists "$download_list"; then
         DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
-        rm "$links"
+        rm "$download_list"
     fi
     apt-get clean
     rm -rf /var/cache/apt/archives/*
@@ -649,6 +662,7 @@ function init() {
         rm -rf netselect*
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
+        local -r netselect_links="/tmp/netselect.list"
         aria2c \
             -j 16 \
             --continue=true \
@@ -656,7 +670,7 @@ function init() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file=/tmp/netselect.list
+            --input-file="$netselect_links"
         dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
         dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
@@ -694,13 +708,13 @@ function init() {
         "tmux"
         "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
-    local -r links="/tmp/apt-fast.list"
+    local -r download_list="/tmp/apt-fast.list"
     for pkg in ${not_installed[@]}; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$links"
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
     done
-    if  file_exists "$links"; then
+    if  file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
             aria2c \
                 -j 16 \
@@ -709,7 +723,7 @@ function init() {
                 --optimize-concurrent-downloads \
                 --connect-timeout=600 \
                 --timeout=600 \
-                --input-file="$links"
+                --input-file="$download_list"
             for pkg in ${not_installed[@]}; do
                 log_info "installing $pkg"
                 sudo apt-get install -yqq "$pkg"

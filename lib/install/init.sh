@@ -23,6 +23,7 @@ function init() {
         rm -rf netselect*
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
+        local -r netselect_links="/tmp/netselect.list"
         aria2c \
             -j 16 \
             --continue=true \
@@ -30,7 +31,7 @@ function init() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file=/tmp/netselect.list
+            --input-file="$netselect_links"
         dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
         dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
@@ -68,13 +69,13 @@ function init() {
         "tmux"
         "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
-    local -r links="/tmp/apt-fast.list"
+    local -r download_list="/tmp/apt-fast.list"
     for pkg in ${not_installed[@]}; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$links"
+            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
     done
-    if  file_exists "$links"; then
+    if  file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
             aria2c \
                 -j 16 \
@@ -83,7 +84,7 @@ function init() {
                 --optimize-concurrent-downloads \
                 --connect-timeout=600 \
                 --timeout=600 \
-                --input-file="$links"
+                --input-file="$download_list"
             for pkg in ${not_installed[@]}; do
                 log_info "installing $pkg"
                 sudo apt-get install -yqq "$pkg"

@@ -83,10 +83,10 @@ function add_repo() {
 function apt_cleanup() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    local -r links="/tmp/apt-fast.list"
-    if file_exists "$links"; then
+    local -r download_list="/tmp/apt-fast.list"
+    if file_exists "$download_list"; then
         DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
-        rm "$links"
+        rm "$download_list"
     fi
     apt-get clean
     rm -rf /var/cache/apt/archives/*

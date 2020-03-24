@@ -78,6 +78,18 @@ function add_to_path() {
     local target_dir="$1"
     add_profile_env_var "PATH" "$PATH:$target_dir"
 }
+function downloader() {
+    if [[ $# != 1 ]]; then
+        echo
+        echo "desc : uses aria2 to download links in a file "
+        echo
+        echo "method usage: downloader [file path containing links]"
+        echo
+        exit 1
+    fi
+    local target_dir="$1"
+    add_profile_env_var "PATH" "$PATH:$target_dir"
+}
 export -f file_exists
 export -f get_file_name
 export -f get_file_dir
@@ -86,3 +98,4 @@ export -f append_line_to_file
 export -f add_to_bashrc
 export -f add_profile_env_var
 export -f add_to_path
+export -f downloader

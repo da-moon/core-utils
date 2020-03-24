@@ -5,17 +5,17 @@ function ffmpeg_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r packages=("mkvtoolnix" "ffmpeg")
-    local -r links="/tmp/apt-fast.list"
+    local -r download_list="/tmp/apt-fast.list"
     log_info "adding mkvtoolnix apt repo key"
     add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
     add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/debian/ buster main"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$links"
+            grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$download_list"
     done
     # End of scriptspecific packages
-    if file_exists "$links"; then
+    if file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
             -j 16 \
@@ -24,7 +24,7 @@ function ffmpeg_installer() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file="$links"
+            --input-file="$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do

@@ -7,7 +7,7 @@ function node_installer() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     # script specific packages
     local -r packages=("nodejs" "yarn")
-    local -r links="/tmp/apt-fast.list"
+    local -r download_list="/tmp/apt-fast.list"
     log_info "running NodeSource Node.js 12.x installer script"
     curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
     log_info "adding yarn apt repo key"
@@ -16,10 +16,10 @@ function node_installer() {
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$links"
+            grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$download_list"
     done
     # End of scriptspecific packages
-    if file_exists "$links"; then
+    if file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
             -j 16 \
@@ -28,7 +28,7 @@ function node_installer() {
             --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
-            --input-file="$links"
+            --input-file="$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do
