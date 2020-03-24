@@ -14,6 +14,7 @@ function fast_apt() {
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
+        log_info "cleaning up apt cache ..."
         apt_cleanup
     else
         apt-get "$@"

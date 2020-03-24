@@ -764,6 +764,8 @@ function init() {
             done
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
+        log_info "cleaning up apt cache ..."
+        apt_cleanup
     fi
     if has_parallel; then
         log_info "parallelizing env ..."
@@ -849,6 +851,7 @@ function fast_apt() {
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         apt-get "$@" -y
+        log_info "cleaning up apt cache ..."
         apt_cleanup
     else
         apt-get "$@"

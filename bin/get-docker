@@ -764,6 +764,8 @@ function init() {
             done
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
+        log_info "cleaning up apt cache ..."
+        apt_cleanup
     fi
     if has_parallel; then
         log_info "parallelizing env ..."
