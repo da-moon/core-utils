@@ -72,7 +72,7 @@ function get_hashi() {
     done
 }
 if [ -n "${BASH_SOURCE+x}" ]; then
-    install_deps
+    init
     stack=("vault" "consul" "nomad" "terraform" "packer")
     if [[ "$#" != 0 ]]; then
         stack=("${@}")
@@ -82,7 +82,7 @@ if [ -n "${BASH_SOURCE+x}" ]; then
     exit $?
 fi
 if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
-    install_deps
+    init
     stack=("vault" "consul" "nomad" "terraform" "packer")
     if [[ "$#" != 0 ]]; then
         stack=("${@}")
