@@ -6,6 +6,14 @@ tasks:
       echo "init 1" &&
       echo "init 2" &&
       echo "init 3"
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true
+    pullRequestsFromForks: true
+    addComment: true
+    addBadge: true
 
 vscode:
   extensions:
