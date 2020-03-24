@@ -673,10 +673,21 @@ function init() {
             stable
         DEBIAN_FRONTEND=noninteractive apt-get update
     fi
-      deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
-        "make" "vim" "nano" "ca-certificates"
-        "wget" "jq" "unzip"
-        "apt-transport-https" "bzip2" "zip")
+      deps=("git" 
+        "apt-utils" 
+        "unzip" 
+        "build-essential" 
+        "software-properties-common"
+        "make" 
+        "vim" 
+        "nano" 
+        "ca-certificates"
+        "wget" 
+        "jq" 
+        "unzip"
+        "apt-transport-https" 
+        "bzip2" 
+        "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
     for pkg in $not_installed; do
         log_info "adding ${pkg} to install candidates"
