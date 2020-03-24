@@ -2,7 +2,6 @@
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 function init() {
-    apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     DEBIAN_FRONTEND=noninteractive apt-get update
@@ -27,12 +26,13 @@ function init() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         aria2c \
-        --continue=true \
-        --max-concurrent-downloads=16 \
-        --max-connection-per-server=16 \
-        --connect-timeout=600 \
-        --timeout=600 \
-        --input-file=/tmp/netselect.list
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
         dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
         dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
@@ -57,9 +57,10 @@ function init() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
+            -j 16 \
             --continue=true \
-            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
             --input-file=/tmp/apt-fast.list

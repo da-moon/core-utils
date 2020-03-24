@@ -628,7 +628,6 @@ export -f git_user_stats
 export -f git_clone
 export -f git_release_list 
 function init() {
-    apt_cleanup
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     DEBIAN_FRONTEND=noninteractive apt-get update
@@ -653,12 +652,13 @@ function init() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         aria2c \
-        --continue=true \
-        --max-concurrent-downloads=16 \
-        --max-connection-per-server=16 \
-        --connect-timeout=600 \
-        --timeout=600 \
-        --input-file=/tmp/netselect.list
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=/tmp/apt-fast.list
         dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
         dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
@@ -669,12 +669,13 @@ function init() {
         log_warn "fast apt sources have not been added. adding now ..."
         netselect-apt --tests 15 --sources --nonfree --outfile /etc/apt/sources-fast.list stable
     fi
+    log_info "about to start installing core dependancies"
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
         "make" "vim" "nano" "ca-certificates" "parallel"
         "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
         "apt-transport-https" "bzip2" "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
-    for pkg in $not_installed; do
+    for pkg in ${not_installed[@]}; do
         log_info "adding ${pkg} to install candidates"
         apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>/tmp/apt-fast.list
@@ -682,15 +683,16 @@ function init() {
     if file_exists "/tmp/apt-fast.list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
         aria2c \
+            -j 16 \
             --continue=true \
-            --max-concurrent-downloads=16 \
             --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
             --connect-timeout=600 \
             --timeout=600 \
             --input-file=/tmp/apt-fast.list
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
-        for pkg in $not_installed; do
+        for pkg in ${not_installed[@]}; do
             log_info "installing $pkg"
             sudo apt-get install -yqq "$pkg"
         done
@@ -703,7 +705,6 @@ function init() {
 }
 export -f init 
 function fast_apt() {
-    apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"

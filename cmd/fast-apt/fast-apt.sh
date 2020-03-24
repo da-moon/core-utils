@@ -3,7 +3,6 @@
 source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)lib/install/init.sh"
 
 function fast_apt() {
-    apt_cleanup
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         log_info "getting uris for $@"
