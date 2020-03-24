@@ -674,8 +674,8 @@ function init() {
             stable
     fi
     deps=("git" "apt-utils" "unzip" "build-essential" "software-properties-common"
-        "make" "vim" "nano" "ca-certificates"
-        "wget" "jq" "unzip"
+        "make" "vim" "nano" "ca-certificates" "parallel"
+        "wget" "gcc" "g++" "jq" "unzip" "ufw" "tmux"
         "apt-transport-https" "bzip2" "zip")
     local -r not_installed=$(filter_installed "${deps[@]}")
     for pkg in $not_installed; do
