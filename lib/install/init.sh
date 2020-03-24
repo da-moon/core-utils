@@ -9,7 +9,7 @@ function init() {
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
     fi
     if ! os_command_is_available "curl"; then
-        log_info "curl not available.installing aria2 ..."
+        log_info "curl not available.installing curl ..."
         DEBIAN_FRONTEND=noninteractive apt-get install -yqq curl
     fi
     if ! os_command_is_available "netselect-apt"; then
