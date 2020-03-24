@@ -87,8 +87,17 @@ function downloader() {
         echo
         exit 1
     fi
-    local target_dir="$1"
-    add_profile_env_var "PATH" "$PATH:$target_dir"
+    local download_list="$1"
+    local downloader=""
+    downloader="aria2c \
+            -j 16 \
+            --continue=true \
+            --max-connection-per-server=16 \
+            --optimize-concurrent-downloads \
+            --connect-timeout=600 \
+            --timeout=600 \
+            --input-file=$download_list"
+    $downloader
 }
 export -f file_exists
 export -f get_file_name

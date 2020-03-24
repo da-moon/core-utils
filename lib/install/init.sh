@@ -24,14 +24,7 @@ function init() {
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         local -r netselect_links="/tmp/netselect.list"
-        aria2c \
-            -j 16 \
-            --continue=true \
-            --max-connection-per-server=16 \
-            --optimize-concurrent-downloads \
-            --connect-timeout=600 \
-            --timeout=600 \
-            --input-file="$netselect_links"
+        downloader "$netselect_links"
         dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
         dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
@@ -77,14 +70,7 @@ function init() {
     done
     if  file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-            aria2c \
-                -j 16 \
-                --continue=true \
-                --max-connection-per-server=16 \
-                --optimize-concurrent-downloads \
-                --connect-timeout=600 \
-                --timeout=600 \
-                --input-file="$download_list"
+            downloader "$download_list"
             for pkg in ${not_installed[@]}; do
                 log_info "installing $pkg"
                 sudo apt-get install -yqq "$pkg"
