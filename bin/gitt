@@ -495,10 +495,10 @@ export -f new_user_as_sudo
 <<<<<<< HEAD
 export -f os_name
 export -f get_distro_name
-export -f _sudo 
+export -f _sudo
 =======
-export -f os_name 
->>>>>>> parent of ee24f78... get_distro_name
+export -f os_name
+>>>>>>> parent of ee24f78... get_distro_name 
 # "extract <file> [path]" "extract any given archive"
 function extract() {
     if ! os_command_is_available "unzip"; then
