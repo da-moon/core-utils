@@ -6,7 +6,7 @@ USER root
 RUN apt-get update && apt-get install -yqq curl
 RUN curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt | bash -s -- \
-    --init
+    --init || true;
 
 ENV HOME=/home/gitpod
 

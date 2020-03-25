@@ -17,7 +17,7 @@ function node_installer() {
     if os_command_is_available "yarn"; then
         log_info "yarn has been installed.fixing environment vars"
         add_to_path '`yarn global bin`'
-        add_to_path '${home}/.yarn/bin'
+        add_to_path '${HOME}/.yarn/bin'
     fi
 }
 export -f node_installer
