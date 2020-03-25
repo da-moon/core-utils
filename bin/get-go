@@ -831,7 +831,7 @@ function init() {
     fi
 }
 export -f init
-bash_version="5"
+bash_version="4"
 if ! min_bash_version "$bash_version"; then
     log_error "you bash version is ${BASH_VERSINFO}.Minimum supported version is $bash_version"
     exit 1
