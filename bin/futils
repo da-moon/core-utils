@@ -837,7 +837,8 @@ function node_installer() {
     log_info "adding yarn apt repo key"
     add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
     add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    execute_as_sudo fast_apt install "${packages}"
+    log_info "logging before "
+    fast_apt "install ${packages[@]}"
     if os_command_is_available "yarn"; then
         log_info "yarn has been installed.fixing environment vars"
         add_to_path '`yarn global bin`'
