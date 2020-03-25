@@ -721,15 +721,28 @@ function fast_apt() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         local -r download_list="/tmp/apt-fast.list"
-        apt-get -y --print-uris "$@" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+        local -r apt_cache="/var/cache/apt/archives"
+        local -r command="${1}"
+        shift
+        log_info "fast_apt : command $command"
+        local -r uris=$(apt-get -y --print-uris $command "${@}")
+        local -r urls=($(echo ${uris} | grep -o -E "(ht|f)t(p|ps)://[^\']+" ))
+        for link in ${urls[@]}; do
+            log_info "adding ${link} to download candidates"
+            echo "$link" >>"$download_list"
+            echo " dir=$apt_cache" >>"$download_list"
+        done
+        if  file_exists "$download_list"; then
             downloader "$download_list"
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        apt-get "$@" -y
-        log_info "cleaning up apt cache ..."
-        apt_cleanup
+            apt-get $command -y "$@" 
+            log_info "cleaning up apt cache ..."
+            apt_cleanup
+        else
+            log_warn "there are no install candidates at $download_list "
+            log_info "cleaning up apt cache ..."
+            apt_cleanup
+            exit 1
+        fi
     else
         apt-get "$@"
     fi
@@ -830,14 +843,12 @@ function node_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     # script specific packages
-    local -r packages=("nodejs" "yarn")
-    local -r download_list="/tmp/apt-fast.list"
     log_info "running NodeSource Node.js 12.x installer script"
     curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
     log_info "adding yarn apt repo key"
     add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
     add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    log_warn "logging before "
+    packages=("nodejs" "yarn")
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "yarn"; then
         log_info "yarn has been installed.fixing environment vars"
@@ -854,10 +865,15 @@ function ffmpeg_installer() {
     log_info "adding mkvtoolnix apt repo key"
     add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
     add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
-    fast_apt install "${packages[@]}"
+    packages=("nodejs" "yarn")
+    fast_apt "install" "${packages[@]}"
     if os_command_is_available "npm"; then
-        log_info "install ffmpeg-progress-bar ..."
-        npm install --global ffmpeg-progressbar-cli
+        if ! os_command_is_available "npm"; then
+            log_info "install ffmpeg-progress-bar ..."
+            npm install --global ffmpeg-progressbar-cli
+        else
+            log_info "ffmpeg-progress-bar already installed.skipping ..."
+        fi
     fi
 }
 export -f ffmpeg_installer 
@@ -873,7 +889,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
-    fast_apt install "${packages[@]}"
+    fast_apt "install" "${packages[@]}"
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
@@ -1007,7 +1023,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
-    fast_apt install "${packages[@]}"
+    fast_apt "install" "${packages[@]}"
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"

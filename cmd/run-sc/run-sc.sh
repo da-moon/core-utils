@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck source=./lib/install/init.sh
-source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)lib/install/init.sh"
+source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)/lib/install/init.sh"
 function run_shellcheck() {
     local -r format="${1}"
     shift

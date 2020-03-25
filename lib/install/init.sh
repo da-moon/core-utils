@@ -1,19 +1,31 @@
 #!/usr/bin/env bash
-# shellcheck source=./lib//os/os.sh
+# shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 function fast_apt() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         local -r download_list="/tmp/apt-fast.list"
-        apt-get -y --print-uris "$@" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
+        local -r apt_cache="/var/cache/apt/archives"
+        local -r command="${1}"
+        shift
+        local -r uris=$(apt-get -y --print-uris $command "${@}")
+        local -r urls=($(echo ${uris} | grep -o -E "(ht|f)t(p|ps)://[^\']+" ))
+        for link in ${urls[@]}; do
+            log_info "adding ${link} to download candidates"
+            echo "$link" >>"$download_list"
+            echo " dir=$apt_cache" >>"$download_list"
+        done
+        if  file_exists "$download_list"; then
             downloader "$download_list"
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        apt-get "$@" -y
-        log_info "cleaning up apt cache ..."
-        apt_cleanup
+            apt-get $command -y "$@" 
+            log_info "cleaning up apt cache ..."
+            apt_cleanup
+        else
+            log_warn "there are no install candidates at $download_list "
+            log_info "cleaning up apt cache ..."
+            apt_cleanup
+            exit 1
+        fi
     else
         apt-get "$@"
     fi

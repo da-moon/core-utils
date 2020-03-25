@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck source=./lib/install/init.sh
-source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)lib/install/init.sh"
+source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)/lib/install/init.sh"
 # shellcheck source=./lib/file/file.sh
-source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)lib/file/file.sh"
+source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)/lib/file/file.sh"
 
 function help() {
     echo
