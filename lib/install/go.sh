@@ -83,7 +83,7 @@ function go_installer() {
     # creating go folders
     log_info "creating GOPATH folders at \$HOME/go/bin \$HOME/go/pkg \$HOME/go/src"
     if [[  -n "${home+x}" ]]; then
-        log_info "making go dirs at ${HOhomeME}"
+        log_info "making go dirs at ${home}"
         mkdir -p "$home/go/bin"
         mkdir -p "$home/go/src"
         mkdir -p "$home/go/pkg"
