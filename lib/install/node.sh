@@ -12,11 +12,9 @@ function node_installer() {
     curl -fsSL https://deb.nodesource.com/setup_12.x | sudo bash -
     log_info "adding yarn apt repo key"
     add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
+    log_error "some random error"
     add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    log_info "about to use fast-apt for installation"
-    fast_apt install "${packages}"
-    log_info " fast-apt installation done"
-    log_error "soem random error"
+    run_as_sudo fast_apt install "${packages}"
     if os_command_is_available "yarn"; then
         log_info "yarn has been installed.fixing environment vars"
         add_to_path '`yarn global bin`'
