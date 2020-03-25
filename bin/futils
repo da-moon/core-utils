@@ -862,11 +862,13 @@ export -f node_installer
 function ffmpeg_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    if ! is_pkg_installed "mkvtoolnix"; then
+        log_warn "mkvtoolnix not found"
+        log_info "adding mkvtoolnix apt repo key"
+        add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
+        add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
+    }
     local -r packages=("mkvtoolnix" "ffmpeg")
-    local -r download_list="/tmp/apt-fast.list"
-    log_info "adding mkvtoolnix apt repo key"
-    add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
-    add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "npm"; then
         if ! os_command_is_available "ffmpeg-bar"; then
@@ -887,8 +889,10 @@ function docker_installer() {
     fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
-    add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
-    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
+    if ! os_command_is_available "docker"; then
+        add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
+        add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
+    fi    
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "docker"; then
@@ -1021,8 +1025,10 @@ function docker_installer() {
     fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
-    add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
-    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
+    if ! os_command_is_available "docker"; then
+        add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
+        add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
+    fi    
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "docker"; then

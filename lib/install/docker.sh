@@ -14,8 +14,10 @@ function docker_installer() {
     fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
-    add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
-    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
+    if ! os_command_is_available "docker"; then
+        add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
+        add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
+    fi    
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "docker"; then
