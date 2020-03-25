@@ -9,7 +9,7 @@ function ffmpeg_installer() {
         log_info "adding mkvtoolnix apt repo key"
         add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
         add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
-    }
+    fi
     local -r packages=("mkvtoolnix" "ffmpeg")
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "npm"; then
