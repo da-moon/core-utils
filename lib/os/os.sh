@@ -88,7 +88,6 @@ function add_repo() {
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r dest="/etc/apt/sources.list.d/$1.list"
     local -r addr="$2"
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if file_exists "$dest"; then
         log_warn "a repo source for $1 already exists. deleting the existing one..."
         rm "$dest"
