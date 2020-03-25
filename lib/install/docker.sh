@@ -7,6 +7,7 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/git/git.sh"
 
 function docker_installer() {
     confirm_sudo
+    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local compose_version=$(get_latest_release_from_git "docker" "compose") 
     if [[ $# == 1 ]]; then
         compose_version="$1"
@@ -22,20 +23,20 @@ function docker_installer() {
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
-            execute_as_sudo mkdir -p "$HOME/.docker"
-            execute_as_sudo mkdir -p "$HOME/.local/share/applications/"
-            execute_as_sudo mkdir -p "$HOME/.local/bin"
+            mkdir -p "$HOME/.docker"
+            mkdir -p "$HOME/.local/share/applications/"
+            mkdir -p "$HOME/.local/bin"
         fi
         if [[  -n "${USER+x}" ]]; then
             log_info "adding docker image and transferring setting docker folder permission"
-            execute_as_sudo newgrp docker
-            execute_as_sudo usermod -aG docker "$USER"
-            execute_as_sudo chown "$USER":"$USER" "/$HOME/.docker" -R
-            execute_as_sudo chmod g+rwx "$HOME/.docker" -R
+            newgrp docker
+            usermod -aG docker "$USER"
+            chown "$USER":"$USER" "/$HOME/.docker" -R
+            chmod g+rwx "$HOME/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"
-            execute_as_sudo systemctl enable docker
+            systemctl enable docker
         fi
     fi
     local -r url="https://github.com/docker/compose/releases/download/"$compose_version"/docker-compose-$(uname -s)-$(uname -m)"
@@ -44,6 +45,6 @@ function docker_installer() {
     curl \
         -L "$url" \
         -o "$compose_path" && \
-    execute_as_sudo chmod +x "$compose_path"
+    chmod +x "$compose_path"
 }
 export -f docker_installer
