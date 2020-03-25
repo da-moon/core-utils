@@ -24,7 +24,6 @@ function fast_apt() {
             log_warn "there are no install candidates at $download_list "
             log_info "cleaning up apt cache ..."
             apt_cleanup
-            exit 1
         fi
     else
         apt-get "$@"
