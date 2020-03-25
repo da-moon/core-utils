@@ -61,13 +61,6 @@ function get_debian_codename() {
     local -r result=$(string_strip_prefix "$version_codename_line" "VERSION_CODENAME=")
     echo "$result"
 }
-function get_distro_name() {
-    local -r os_release=$(cat /etc/os-release)
-    local -r trimmed=$(echo "$os_release" | grep -v VERSION_ID | grep -v ID_LIKE)
-    local -r version_codename_line=$(echo "$trimmed" | grep -e ID)
-    local -r result=$(string_strip_prefix "$version_codename_line" "ID=")
-    echo "$result"
-}
 function add_key() {
     if [[ $# == 0 ]]; then
         log_error "No argument was passed to add_key method"
@@ -168,6 +161,10 @@ export -f min_bash_version
 export -f arch_probe
 export -f user_exists
 export -f new_user_as_sudo
+<<<<<<< HEAD
 export -f os_name
 export -f get_distro_name
 export -f _sudo
+=======
+export -f os_name
+>>>>>>> parent of ee24f78... get_distro_name
