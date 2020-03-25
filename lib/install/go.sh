@@ -63,9 +63,9 @@ function go_installer() {
     fi
     local -r go_root="$root_dir/go"
     log_info "removing any existing installations at $go_root"
-    _sudo rm -rf "$go_root" 
+    execute_as_sudo rm -rf "$go_root" 
     log_info "extracting $go_archive into $go_root"
-    _sudo extract "$go_archive" "$root_dir"
+    execute_as_sudo extract "$go_archive" "$root_dir"
     local -r go_tool_dir="$go_root/bin"
     # testing installation
     log_info "testing extracted go tool "
@@ -78,8 +78,8 @@ function go_installer() {
     mkdir -p "$HOME/go/pkg"
     if [[  -n "${USER+x}" ]]; then
         log_info "setting ownership of go dirs to ${USER}"
-            _sudo chown "$USER":"$USER" "/$HOME/go" -R
-            _sudo chmod g+rwx "$HOME/go" -R
+            execute_as_sudo chown "$USER":"$USER" "/$HOME/go" -R
+            execute_as_sudo chmod g+rwx "$HOME/go" -R
     fi
     # adding go to path
     log_info "adding GO env variables to \$HOME/.bashrc"

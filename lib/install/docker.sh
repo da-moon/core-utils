@@ -21,20 +21,20 @@ function docker_installer() {
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
-            _sudo mkdir -p "$HOME/.docker"
-            _sudo mkdir -p "$HOME/.local/share/applications/"
-            _sudo mkdir -p "$HOME/.local/bin"
+            execute_as_sudo mkdir -p "$HOME/.docker"
+            execute_as_sudo mkdir -p "$HOME/.local/share/applications/"
+            execute_as_sudo mkdir -p "$HOME/.local/bin"
         fi
         if [[  -n "${USER+x}" ]]; then
             log_info "adding docker image and transferring setting docker folder permission"
-            _sudo newgrp docker
-            _sudo usermod -aG docker "$USER"
-            _sudo chown "$USER":"$USER" "/$HOME/.docker" -R
-            _sudo chmod g+rwx "$HOME/.docker" -R
+            execute_as_sudo newgrp docker
+            execute_as_sudo usermod -aG docker "$USER"
+            execute_as_sudo chown "$USER":"$USER" "/$HOME/.docker" -R
+            execute_as_sudo chmod g+rwx "$HOME/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"
-            _sudo systemctl enable docker
+            execute_as_sudo systemctl enable docker
         fi
     fi
     local -r url="https://github.com/docker/compose/releases/download/"$compose_version"/docker-compose-$(uname -s)-$(uname -m)"
@@ -43,6 +43,6 @@ function docker_installer() {
     curl \
         -L "$url" \
         -o "$compose_path" && \
-    _sudo chmod +x "$compose_path"
+    execute_as_sudo chmod +x "$compose_path"
 }
 export -f docker_installer
