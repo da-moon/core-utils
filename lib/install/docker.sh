@@ -6,6 +6,15 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/git/git.sh"
 
 function docker_installer() {
+    local  home
+    local  user
+    if [[  -n "${USER+x}" ]]; then
+        user="${USER}"
+    fi
+    if [[  -n "${HOME+x}" ]]; then
+        home="${HOME}"
+    fi
+
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local compose_version=$(get_latest_release_from_git "docker" "compose") 
@@ -35,18 +44,18 @@ function docker_installer() {
         apt_cleanup
     fi
     if os_command_is_available "docker"; then
-        log_info "making docker directories"
-        mkdir -p "$HOME/.docker"
-        mkdir -p "$HOME/.local/share/applications/"
-        mkdir -p "$HOME/.local/bin"
-        log_info "adding docker image and transferring setting docker folder permission"
-        
-
-        if [[  -n "${USER+x}" ]]; then
-                newgrp docker
-                usermod -aG docker "$USER"
-                chown "$USER":"$USER" "/home/$USER/.docker" -R
-                chmod g+rwx "$HOME/.docker" -R
+        if [[  -n "${home+x}" ]]; then
+            log_info "making docker directories"
+            mkdir -p "$home/.docker"
+            mkdir -p "$home/.local/share/applications/"
+            mkdir -p "$home/.local/bin"
+        fi
+        if [[  -n "${user+x}" ]]; then
+            log_info "adding docker image and transferring setting docker folder permission"
+            newgrp docker
+            usermod -aG docker "$user"
+            chown "$user":"$user" "/$home/.docker" -R
+            chmod g+rwx "$home/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"

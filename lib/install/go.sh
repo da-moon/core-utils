@@ -13,6 +13,14 @@ function get_go_latest_version() {
     echo "$(string_strip_prefix "$latest" "go")"
 }
 function go_installer() {
+    local  home
+    local  user
+    if [[  -n "${USER+x}" ]]; then
+        user="${USER}"
+    fi
+    if [[  -n "${HOME+x}" ]]; then
+        home="${HOME}"
+    fi
     confirm_sudo
     [ "`whoami`" = root ] || exec sudo "$0" "$@"
     if is_pkg_installed "golang-go"; then
@@ -74,11 +82,19 @@ function go_installer() {
     "$go_tool_dir/go" version
     # creating go folders
     log_info "creating GOPATH folders at \$HOME/go/bin \$HOME/go/pkg \$HOME/go/src"
-    mkdir -p "$HOME/go/bin"
-    mkdir -p "$HOME/go/src"
-    mkdir -p "$HOME/go/pkg"
+    if [[  -n "${home+x}" ]]; then
+        log_info "making go dirs at ${HOhomeME}"
+        mkdir -p "$home/go/bin"
+        mkdir -p "$home/go/src"
+        mkdir -p "$home/go/pkg"
+    fi
+    if [[  -n "${user+x}" ]]; then
+        log_info "setting ownership of go dirs to ${user}"
+            chown "$user":"$user" "/$home/go" -R
+            chmod g+rwx "$home/go" -R
+    fi
     # adding go to path
-    log_info "adding GO env variables to \$HOME.bashrc"
+    log_info "adding GO env variables to \$HOME/.bashrc"
     add_profile_env_var "GOPATH" '$HOME/go'
     add_profile_env_var "GOROOT" "$go_root"
     add_profile_env_var "GO111MODULE" 'off'
