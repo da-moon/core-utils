@@ -11,10 +11,11 @@ function docker_installer() {
     if [[ $# == 1 ]]; then
         compose_version="$1"
     fi
+    
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
-    add_key "https://download.docker.com/linux/debian/gpg"
-    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
+    add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
+    add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/$(get_distro_name) $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     fast_apt install "${packages[@]}"
 
