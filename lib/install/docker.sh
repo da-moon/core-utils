@@ -12,7 +12,6 @@ function docker_installer() {
     if [[ $# == 1 ]]; then
         compose_version="$1"
     fi
-    
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
     add_key "https://download.docker.com/linux/$(get_distro_name)/gpg"
