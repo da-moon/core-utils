@@ -16,7 +16,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/debian/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
-    fast_apt "${packages}"
+    fast_apt install "${packages[@]}"
 
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then

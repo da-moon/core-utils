@@ -838,7 +838,7 @@ function node_installer() {
     log_info "adding yarn apt repo key"
     add_key "https://dl.yarnpkg.com/debian/pubkey.gpg"
     add_repo "yarn-nightly" "deb https://nightly.yarnpkg.com/debian/ nightly main"
-    fast_apt "${packages[@]}"
+    fast_apt install "${packages[@]}"
     if os_command_is_available "yarn"; then
         log_info "yarn has been installed.fixing environment vars"
         add_to_path '`yarn global bin`'
@@ -854,7 +854,7 @@ function ffmpeg_installer() {
     log_info "adding mkvtoolnix apt repo key"
     add_key "https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt"
     add_repo "mkvtoolnix" "deb https://mkvtoolnix.download/$(get_distro_name)/ $(get_debian_codename) main"
-    fast_apt "${packages[@]}"
+    fast_apt install "${packages[@]}"
     if os_command_is_available "npm"; then
         log_info "install ffmpeg-progress-bar ..."
         npm install --global ffmpeg-progressbar-cli
@@ -872,7 +872,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/debian/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
-    fast_apt "${packages}"
+    fast_apt install "${packages[@]}"
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
@@ -1004,7 +1004,7 @@ function docker_installer() {
     add_key "https://download.docker.com/linux/debian/gpg"
     add_repo "docker" "deb [arch=amd64] https://download.docker.com/linux/debian $(get_debian_codename) stable"
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
-    fast_apt "${packages}"
+    fast_apt install "${packages[@]}"
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
