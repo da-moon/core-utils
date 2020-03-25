@@ -161,10 +161,6 @@ export -f min_bash_version
 export -f arch_probe
 export -f user_exists
 export -f new_user_as_sudo
-<<<<<<< HEAD
 export -f os_name
 export -f get_distro_name
 export -f _sudo
-=======
-export -f os_name
->>>>>>> parent of ee24f78... get_distro_name
