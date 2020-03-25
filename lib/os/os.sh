@@ -137,7 +137,7 @@ function new_user_as_sudo() {
         -s  /bin/bash -p "${user}" "${user}" 
     fi
 }
-function execute_as_sudo {
+function _sudo {
         local firstArg=$1
         if [ $(type -t $firstArg) = function ]
         then
@@ -170,4 +170,4 @@ export -f user_exists
 export -f new_user_as_sudo
 export -f os_name
 export -f get_distro_name
-export -f execute_as_sudo
+export -f _sudo

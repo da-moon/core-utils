@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-# shellcheck source=./lib/os/os.sh
-source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
+# shellcheck source=./lib/install/init.sh
+source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/install/init.sh"

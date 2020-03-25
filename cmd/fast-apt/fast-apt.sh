@@ -2,23 +2,6 @@
 # shellcheck source=./lib/install/init.sh
 source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)lib/install/init.sh"
 
-function fast_apt() {
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
-        local -r download_list="/tmp/apt-fast.list"
-        apt-get -y --print-uris "$@" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-            downloader "$download_list"
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        apt-get "$@" -y
-        log_info "cleaning up apt cache ..."
-        apt_cleanup
-    else
-        apt-get "$@"
-    fi
-}
 function help() {
     echo
     echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
