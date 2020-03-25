@@ -137,6 +137,20 @@ function new_user_as_sudo() {
         -s  /bin/bash -p "${user}" "${user}" 
     fi
 }
+function execute_as_sudo {
+        local firstArg=$1
+        if [ $(type -t $firstArg) = function ]
+        then
+                shift && command sudo bash -c "$(declare -f $firstArg);$firstArg $*"
+        elif [ $(type -t $firstArg) = alias ]
+        then
+                alias sudo='\sudo '
+                eval "sudo $@"
+        else
+                command sudo "$@"
+        fi
+}
+
 export -f is_root
 export -f os_command_is_available
 export -f has_sudo
@@ -156,3 +170,4 @@ export -f user_exists
 export -f new_user_as_sudo
 export -f os_name
 export -f get_distro_name
+export -f execute_as_sudo

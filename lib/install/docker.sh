@@ -19,37 +19,37 @@ function docker_installer() {
     local -r download_list="/tmp/apt-fast.list"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
-        sudo apt-get -y --print-uris install "$pkg" |
+        execute_as_sudo apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$download_list"
     done
         if file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        sudo downloader "$download_list"
+        execute_as_sudo downloader "$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do
             log_info "installing $pkg"
-            sudo apt-get install -yqq "$pkg"
+            execute_as_sudo apt-get install -yqq "$pkg"
         done
         apt_cleanup
     fi
     if os_command_is_available "docker"; then
         if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
-            sudo mkdir -p "$HOME/.docker"
-            sudo mkdir -p "$HOME/.local/share/applications/"
-            sudo mkdir -p "$HOME/.local/bin"
+            execute_as_sudo mkdir -p "$HOME/.docker"
+            execute_as_sudo mkdir -p "$HOME/.local/share/applications/"
+            execute_as_sudo mkdir -p "$HOME/.local/bin"
         fi
         if [[  -n "${USER+x}" ]]; then
             log_info "adding docker image and transferring setting docker folder permission"
-            sudo newgrp docker
-            sudo usermod -aG docker "$USER"
-            sudo chown "$USER":"$USER" "/$HOME/.docker" -R
-            sudo chmod g+rwx "$HOME/.docker" -R
+            execute_as_sudo newgrp docker
+            execute_as_sudo usermod -aG docker "$USER"
+            execute_as_sudo chown "$USER":"$USER" "/$HOME/.docker" -R
+            execute_as_sudo chmod g+rwx "$HOME/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"
-            sudo systemctl enable docker
+            execute_as_sudo systemctl enable docker
         fi
     fi
     local -r url="https://github.com/docker/compose/releases/download/"$compose_version"/docker-compose-$(uname -s)-$(uname -m)"
@@ -58,6 +58,6 @@ function docker_installer() {
     curl \
         -L "$url" \
         -o "$compose_path" && \
-    sudo chmod +x "$compose_path"
+    execute_as_sudo chmod +x "$compose_path"
 }
 export -f docker_installer
