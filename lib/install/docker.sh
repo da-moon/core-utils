@@ -6,17 +6,7 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/git/git.sh"
 
 function docker_installer() {
-    local  home
-    local  user
-    if [[  -n "${USER+x}" ]]; then
-        user="${USER}"
-    fi
-    if [[  -n "${HOME+x}" ]]; then
-        home="${HOME}"
-    fi
-
     confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local compose_version=$(get_latest_release_from_git "docker" "compose") 
     if [[ $# == 1 ]]; then
         compose_version="$1"
@@ -29,12 +19,12 @@ function docker_installer() {
     local -r download_list="/tmp/apt-fast.list"
     for pkg in "${packages[@]}"; do
         log_info "adding ${pkg} to install candidates"
-        apt-get -y --print-uris install "$pkg" |
+        sudo apt-get -y --print-uris install "$pkg" |
             grep -o -E "(ht|f)t(p|ps)://[^']+" >>"$download_list"
     done
         if file_exists "$download_list"; then
         pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-        downloader "$download_list"
+        sudo downloader "$download_list"
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
         for pkg in "${packages[@]}"; do
@@ -44,22 +34,22 @@ function docker_installer() {
         apt_cleanup
     fi
     if os_command_is_available "docker"; then
-        if [[  -n "${home+x}" ]]; then
+        if [[  -n "${HOME+x}" ]]; then
             log_info "making docker directories"
-            mkdir -p "$home/.docker"
-            mkdir -p "$home/.local/share/applications/"
-            mkdir -p "$home/.local/bin"
+            sudo mkdir -p "$HOME/.docker"
+            sudo mkdir -p "$HOME/.local/share/applications/"
+            sudo mkdir -p "$HOME/.local/bin"
         fi
-        if [[  -n "${user+x}" ]]; then
+        if [[  -n "${USER+x}" ]]; then
             log_info "adding docker image and transferring setting docker folder permission"
-            newgrp docker
-            usermod -aG docker "$user"
-            chown "$user":"$user" "/$home/.docker" -R
-            chmod g+rwx "$home/.docker" -R
+            sudo newgrp docker
+            sudo usermod -aG docker "$USER"
+            sudo chown "$USER":"$USER" "/$HOME/.docker" -R
+            sudo chmod g+rwx "$HOME/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"
-            systemctl enable docker
+            sudo systemctl enable docker
         fi
     fi
     local -r url="https://github.com/docker/compose/releases/download/"$compose_version"/docker-compose-$(uname -s)-$(uname -m)"
