@@ -82,6 +82,13 @@ function assert_not_empty() {
         exit 1
     fi
 }
+function unique_id() {
+    local length
+    local result
+    length="$1"
+    result="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c "$length")"
+    echo "$result"
+}
 export -f string_contains
 export -f string_multiline_contains
 export -f string_to_uppercase
@@ -94,3 +101,4 @@ export -f string_yellow
 export -f string_green
 export -f string_red
 export -f assert_not_empty
+export -f unique_id
