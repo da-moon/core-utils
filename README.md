@@ -143,6 +143,16 @@ sudo wget -q -O \
 sudo chmod +x /usr/bin/get-go
 ```
 
+- `get-java`
+
+```bash
+sudo rm -f /usr/bin/get-java && \
+sudo wget -q -O \
+    /usr/bin/get-java \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-java && \
+sudo chmod +x /usr/bin/get-java
+```
+
 - `run-sc`
 
 ```bash

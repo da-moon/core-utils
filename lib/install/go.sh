@@ -38,7 +38,8 @@ function go_installer() {
     esac
     log_info "started procedure for go toolchain"
     local -r os=$(os_name)
-    local -r uuid=$(unique_id 6)
+    # local -r uuid=$(unique_id 6)
+    local -r uuid="id"
     local version
     local version=$(get_go_latest_version)
     if [[ $# == 1 ]]; then
