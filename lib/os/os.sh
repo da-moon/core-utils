@@ -69,14 +69,22 @@ function get_distro_name() {
     echo "$result"
 }
 function add_key() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     if [[ $# == 0 ]]; then
         log_error "No argument was passed to add_key method"
         exit 1
     fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    curl -fsSL "$1" | apt-key add -
+   
+    curl -fsSL "$1" | sudo apt-key add -
 }
 function add_repo() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     if [[ $# != 2 ]]; then
         echo
         echo "desc : adds an apt repository"
@@ -85,7 +93,6 @@ function add_repo() {
         echo
         exit 1
     fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r dest="/etc/apt/sources.list.d/$1.list"
     local -r addr="$2"
     if file_exists "$dest"; then
@@ -93,12 +100,15 @@ function add_repo() {
         rm "$dest"
     fi
     log_info "adding repo for $1"
-    echo "$addr" | tee "$dest"
-    apt-get update
+    echo "$addr" | sudo tee "$dest"
+    sudo apt-get update
 }
 function apt_cleanup() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     confirm_sudo
-    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r download_list="/tmp/apt-fast.list"
     if file_exists "$download_list"; then
         sudo apt-get install -y --fix-broken
@@ -127,11 +137,18 @@ function user_exists() {
     getent passwd ${user}  > /dev/null
 }
 function new_user_as_sudo() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
+    if [[ $# == 0 ]]; then
+        log_error "No argument was passed to new_user_as_sudo method"
+        exit 1
+    fi
     local -r user="$1"
-    [ "`whoami`" = root ] || exec sudo "$0" "$@"
     if ! $(user_exists "${user}");then
         log_info "creating user ${user}"
-        useradd -l -u 33333 -G sudo \
+        sudo useradd -l -u 33333 -G sudo \
         -md "/home/${user}" \
         -s  /bin/bash -p "${user}" "${user}" 
     fi

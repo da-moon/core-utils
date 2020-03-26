@@ -402,14 +402,21 @@ function get_distro_name() {
     echo "$result"
 }
 function add_key() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     if [[ $# == 0 ]]; then
         log_error "No argument was passed to add_key method"
         exit 1
     fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    curl -fsSL "$1" | apt-key add -
+    curl -fsSL "$1" | sudo apt-key add -
 }
 function add_repo() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     if [[ $# != 2 ]]; then
         echo
         echo "desc : adds an apt repository"
@@ -418,7 +425,6 @@ function add_repo() {
         echo
         exit 1
     fi
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r dest="/etc/apt/sources.list.d/$1.list"
     local -r addr="$2"
     if file_exists "$dest"; then
@@ -426,12 +432,15 @@ function add_repo() {
         rm "$dest"
     fi
     log_info "adding repo for $1"
-    echo "$addr" | tee "$dest"
-    apt-get update
+    echo "$addr" | sudo tee "$dest"
+    sudo apt-get update
 }
 function apt_cleanup() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     confirm_sudo
-    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r download_list="/tmp/apt-fast.list"
     if file_exists "$download_list"; then
         sudo apt-get install -y --fix-broken
@@ -459,11 +468,18 @@ function user_exists() {
     getent passwd ${user}  > /dev/null
 }
 function new_user_as_sudo() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
+    if [[ $# == 0 ]]; then
+        log_error "No argument was passed to new_user_as_sudo method"
+        exit 1
+    fi
     local -r user="$1"
-    [ "`whoami`" = root ] || exec sudo "$0" "$@"
     if ! $(user_exists "${user}");then
         log_info "creating user ${user}"
-        useradd -l -u 33333 -G sudo \
+        sudo useradd -l -u 33333 -G sudo \
         -md "/home/${user}" \
         -s  /bin/bash -p "${user}" "${user}" 
     fi
@@ -914,12 +930,20 @@ function get_go_latest_version() {
     echo "$(string_strip_prefix "$latest" "go")"
 }
 function go_installer() {
-    log_info "running as user ${USER} with home ${HOME}"
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
+     if [[ $# == 0 ]]; then
+        log_error "No argument was passed to go_installer"
+        exit 1
+    fi
+    local -r user="$1"
+    local home="/home/$user"
     confirm_sudo
-    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if is_pkg_installed "golang-go"; then
         log_warn "golang-go is installed, removing..."
-        execute_as_sudo apt-get remove -yqq golang-go
+        sudo apt-get remove -yqq golang-go
     fi
     local arch
     arch=$(arch_probe)
@@ -937,20 +961,18 @@ function go_installer() {
             arch="armv6l"
         ;;
     esac
-    log_info "started procedure for go toolchain"
     local -r os=$(os_name)
-    # local -r uuid=$(unique_id 6)
-    local -r uuid="id"
+    local -r uuid=$(unique_id 6)
     local version
-    local version=$(get_go_latest_version)
-    if [[ $# == 1 ]]; then
-        version="$1"
+    version=$(get_go_latest_version)
+    if [[ $# == 2 ]]; then
+        version="$2"
     fi
+    local -r download_dir="/tmp/go_tmp_${uuid}"
     local -r root_dir="/usr/local"
-    # local -r root_dir="$PWD/tmp"
     local -r file_name="go${version}.${os}-${arch}.tar.gz"
     local -r url="https://storage.googleapis.com/golang/${file_name}"
-    local -r download_dir="/tmp/go_tmp_${uuid}"
+    log_info "installing go ${version} arch ${arc} for user ${user}"
     mkdir -p "${download_dir}"
     local -r go_archive="${download_dir}/${file_name}"
     local -r download_list="/tmp/go-lang.list"
@@ -968,7 +990,7 @@ function go_installer() {
     fi
     local -r go_root="${root_dir}/go"
     log_info "removing any existing installations at $go_root"
-    execute_as_sudo rm -rf "$go_root" 
+    sudo rm -rf "$go_root" 
     log_info "extracting ${go_archive} into ${go_root}"
     extract "${go_archive}" "${root_dir}"
     local -r go_tool_dir="${go_root}/bin"
@@ -978,14 +1000,12 @@ function go_installer() {
     # creating go folders
     log_info "creating GOPATH folders at \$HOME/go/bin \$HOME/go/pkg \$HOME/go/src"
     log_info "making go dirs at ${home}"
-    mkdir -p "${HOME}/go/bin"
-    mkdir -p "${HOME}/go/src"
-    mkdir -p "${HOME}/go/pkg"
-    if [[  -n "${USER+x}" ]]; then
-        log_info "setting ownership of go dirs to ${USER}"
-            execute_as_sudo chown "${USER}":"${USER}" "${HOME}/go" -R
-            execute_as_sudo chmod g+rwx "${HOME}/go" -R
-    fi
+    mkdir -p "${home}/go/bin"
+    mkdir -p "${home}/go/src"
+    mkdir -p "${home}/go/pkg"
+    log_info "setting ownership of go dirs to ${user}"
+    sudo chown "${user}":"${user}" "${home}/go" -R
+    sudo chmod g+rwx "${home}/go" -R
     # adding go to path
     log_info "adding GO env variables to \$HOME/.bashrc"
     add_profile_env_var "GOPATH" '$HOME/go'
@@ -1211,6 +1231,85 @@ function get_hashi() {
 }
 export -f get_hashi_latest_version
 export -f get_hashi 
+function help() {
+    echo
+    echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
+    echo
+    echo
+    echo -e "[Synopsis]:\tdownloads and install lates version of go toolchain"
+    echo -e "  --user\t\tuser to install go toolchain for"
+    echo -e "\t\tgo folders will be created under '$${home}/go'"
+    echo
+    echo
+    echo "Optional Flags:"
+    echo
+    echo -e "  --update\t\tupdates $(basename "$0") to the letest version at master branch."
+    echo
+    echo "Example:"
+    echo
+    echo "  sudo $(basename "$0") --user gitpod "
+    echo
+}
+function update() {
+    local -r url="https://raw.githubusercontent.com/da-moon/core-utils/master/bin/$(basename "$0")"
+    local -r install_location=$(whereis "$(basename "$0")" | grep -E -o "$(basename "$0").*" | cut -f2- -d: | tr -s ' ' | cut -d ' ' -f2)
+    log_info "updating $(basename "$0") located at $install_location"
+    if [ ! -w "$install_location" ]; then
+        log_info "needs sudo for updating file at $install_location"
+        confirm_sudo
+        [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    fi
+    log_info "removing old file at $install_location"
+    rm "$install_location"
+    log_info "downloading $url"
+    wget -q -O "$install_location" "$url"
+    log_info "setting $install_location as executable"
+    chmod +x "$install_location"
+}
+function main() {
+    if [[ $# == 0 ]]; then
+        help
+        exit
+    fi
+    local version=$(get_go_latest_version)
+    local user
+    while [[ $# -gt 0 ]]; do
+        local key="$1"
+        case "$key" in
+        --user)
+            if ! is_root; then
+                log_error "needs root permission to run.exiting..."
+                exit 1
+            fi
+            shift
+            user="$1"
+            ;;
+        --version)
+            if ! is_root; then
+                log_error "needs root permission to run.exiting..."
+                exit 1
+            fi
+            shift
+            version="$1"
+            ;;
+        --update)
+            update
+            shift
+            ;;
+        *)
+        if [ -z ${user+x} ]; then 
+            help
+            exit
+         else
+            init
+            go_installer "${user}" "${version}"
+            exit
+        fi
+            ;;
+        esac
+        shift
+    done
+}
 if [ -z "${BASH_SOURCE+x}" ]; then
     init
     version=$(get_go_latest_version) 
@@ -1225,4 +1324,4 @@ else
         go_installer "$version"
         exit $?
     fi
-fi
+fi 

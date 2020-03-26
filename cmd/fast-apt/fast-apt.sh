@@ -72,9 +72,7 @@ if [ -z "${BASH_SOURCE+x}" ]; then
     main "${@}"
     exit $?
 else
-    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-        export -f fast_apt
-    else
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         main "${@}"
         exit $?
     fi
