@@ -2,6 +2,10 @@
 # shellcheck source=./lib/install/init.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/install/init.sh"
 function ffmpeg_installer() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if ! is_pkg_installed "mkvtoolnix"; then

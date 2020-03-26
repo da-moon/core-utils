@@ -16,7 +16,7 @@ function fast_apt() {
             echo " dir=$apt_cache" >>"$download_list"
         done
         if  file_exists "$download_list"; then
-            execute_as_sudo downloader "$download_list"
+            downloader "$download_list"
             sudo apt-get $command -y "$@" 
             log_info "cleaning up apt cache ..."
             apt_cleanup

@@ -5,12 +5,12 @@ source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)/
 source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)/lib/install/java.sh"
 
 if [ -z "${BASH_SOURCE+x}" ]; then
-    init
+    # init
     java_installer
     exit $?
 else
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-        init
+        # init
         java_installer
         exit $?
     fi

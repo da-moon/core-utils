@@ -55,7 +55,7 @@ function go_installer() {
     local -r root_dir="/usr/local"
     local -r file_name="go${version}.${os}-${arch}.tar.gz"
     local -r url="https://storage.googleapis.com/golang/${file_name}"
-    log_info "installing go ${version} arch ${arc} for user ${user}"
+    log_info "installing go ${version} arch ${arch} for user ${user}"
     mkdir -p "${download_dir}"
     local -r go_archive="${download_dir}/${file_name}"
     local -r download_list="/tmp/go-lang.list"

@@ -748,7 +748,7 @@ function fast_apt() {
             echo " dir=$apt_cache" >>"$download_list"
         done
         if  file_exists "$download_list"; then
-            execute_as_sudo downloader "$download_list"
+            downloader "$download_list"
             sudo apt-get $command -y "$@" 
             log_info "cleaning up apt cache ..."
             apt_cleanup
@@ -836,6 +836,10 @@ if ! min_bash_version "$bash_version"; then
 fi 
 # end of shared base
 function node_installer() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     # script specific packages
@@ -858,6 +862,10 @@ function node_installer() {
 }
 export -f node_installer 
 function ffmpeg_installer() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if ! is_pkg_installed "mkvtoolnix"; then
@@ -981,7 +989,7 @@ function go_installer() {
     local -r root_dir="/usr/local"
     local -r file_name="go${version}.${os}-${arch}.tar.gz"
     local -r url="https://storage.googleapis.com/golang/${file_name}"
-    log_info "installing go ${version} arch ${arc} for user ${user}"
+    log_info "installing go ${version} arch ${arch} for user ${user}"
     mkdir -p "${download_dir}"
     local -r go_archive="${download_dir}/${file_name}"
     local -r download_list="/tmp/go-lang.list"
@@ -1030,6 +1038,23 @@ function go_installer() {
 }
 export -f go_installer
 export -f get_go_latest_version 
+function cpp_installer() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
+    confirm_sudo
+    [ "`whoami`" = root ] || exec sudo "$0" "$@"
+    log_info "started procedure for llvm/cpp/c toolchains"
+    log_info "adding llvm apt repo key"
+    add_key "https://apt.llvm.org/llvm-snapshot.gpg.key"
+    add_repo "llvm" "deb http://apt.llvm.org/$(get_debian_codename)/ llvm-toolchain-$(get_debian_codename) main"
+    # @todo add clang-tools 
+    # breaks gp build atm
+    local -r packages=("g++" "gcc" "clang-format" "clang-tidy" "clangd" "gdb" "lld")
+    fast_apt "install" "${packages[@]}"
+}
+export -f cpp_installer 
 function vscode_installer() {
     if  os_command_is_available "code"; then
         log_warn "vscode has already been installed...skipping installation." 

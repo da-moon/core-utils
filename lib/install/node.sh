@@ -3,6 +3,10 @@
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/install/init.sh"
 # end of shared base
 function node_installer() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     # script specific packages

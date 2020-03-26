@@ -8,6 +8,11 @@ source "$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)/
 
 
 if [ -z "${BASH_SOURCE+x}" ]; then
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
+
     init
     stack=("vault" "consul" "nomad" "terraform" "packer")
     if [[ "$#" != 0 ]]; then
@@ -18,6 +23,10 @@ if [ -z "${BASH_SOURCE+x}" ]; then
     exit $?
 else
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        if ! is_root; then
+            log_error "needs root permission to run.exiting..."
+            exit 1
+        fi
         init
         stack=("vault" "consul" "nomad" "terraform" "packer")
         if [[ "$#" != 0 ]]; then
