@@ -1298,4 +1298,4 @@ else
         vscode_extension_installer
         exit $?
     fi
-fi
+fi 

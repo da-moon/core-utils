@@ -19,7 +19,7 @@ LIBS += lib/install/docker.sh lib/install/hashicorp.sh
 
 # todo add
 # homebrew
-#  
+# python 
 
 EXT=sh
 FLATTENED_NAME=coreutils-lib

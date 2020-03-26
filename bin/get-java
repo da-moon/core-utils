@@ -1288,4 +1288,4 @@ else
         java_installer
         exit $?
     fi
-fi
+fi 
