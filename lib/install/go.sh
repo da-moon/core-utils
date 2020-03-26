@@ -13,12 +13,17 @@ function get_go_latest_version() {
     echo "$(string_strip_prefix "$latest" "go")"
 }
 function go_installer() {
+    local user="${USER}"
+    local -r home="${HOME}"
+    log_info "before user > $user"
+    log_info "before home > $home"
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-
+    log_info "after user > $user"
+    log_info "after home > $home"
     if is_pkg_installed "golang-go"; then
         log_warn "golang-go is installed, removing..."
-        sudo apt-get remove -yqq golang-go
+        apt-get remove -yqq golang-go
     fi
     local arch
     arch=$(arch_probe)
@@ -45,14 +50,15 @@ function go_installer() {
         version="$1"
     fi
     local -r root_dir="/usr/local"
-    local -r file_name="go$version.$os-$arch.tar.gz"
-    local -r url="https://storage.googleapis.com/golang/$file_name"
-    local -r download_dir="/tmp/go_tmp_$uuid"
-    mkdir -p "$download_dir"
-    local -r go_archive="$download_dir/$file_name"
+    # local -r root_dir="$PWD/tmp"
+    local -r file_name="go${version}.${os}-${arch}.tar.gz"
+    local -r url="https://storage.googleapis.com/golang/${file_name}"
+    local -r download_dir="/tmp/go_tmp_${uuid}"
+    mkdir -p "${download_dir}"
+    local -r go_archive="${download_dir}/${file_name}"
     local -r download_list="/tmp/go-lang.list"
     rm -f "${download_list}"
-    log_info "about to download go version $version for os $os and arch $arch"
+    log_info "about to download go version ${version} for os ${os} and arch ${arch}"
     if file_exists "$go_archive"; then
         log_warn "$go_archive has already been downloaded. deleting the existing one..."
         rm "$go_archive"
@@ -63,37 +69,37 @@ function go_installer() {
     if file_exists "${download_list}"; then
         downloader "$download_list"
     fi
-    local -r go_root="$root_dir/go"
+    local -r go_root="${root_dir}/go"
     log_info "removing any existing installations at $go_root"
     rm -rf "$go_root" 
-    log_info "extracting $go_archive into $go_root"
-    extract "$go_archive" "$root_dir"
-    local -r go_tool_dir="$go_root/bin"
+    log_info "extracting ${go_archive} into ${go_root}"
+    extract "${go_archive}" "${root_dir}"
+    local -r go_tool_dir="${go_root}/bin"
     # testing installation
     log_info "testing extracted go tool "
     "$go_tool_dir/go" version
     # creating go folders
     log_info "creating GOPATH folders at \$HOME/go/bin \$HOME/go/pkg \$HOME/go/src"
-    log_info "making go dirs at ${HOME}"
-    mkdir -p "$HOME/go/bin"
-    mkdir -p "$HOME/go/src"
-    mkdir -p "$HOME/go/pkg"
-    if [[  -n "${USER+x}" ]]; then
-        log_info "setting ownership of go dirs to ${USER}"
-            chown "$USER":"$USER" "/$HOME/go" -R
-            chmod g+rwx "$HOME/go" -R
+    log_info "making go dirs at ${home}"
+    mkdir -p "${home}/go/bin"
+    mkdir -p "${home}/go/src"
+    mkdir -p "${home}/go/pkg"
+    if [[  -n "${user+x}" ]]; then
+        log_info "setting ownership of go dirs to ${user}"
+            chown "${user}":"${user}" "/${home}/go" -R
+            chmod g+rwx "${home}/go" -R
     fi
     # adding go to path
     log_info "adding GO env variables to \$HOME/.bashrc"
     add_profile_env_var "GOPATH" '$HOME/go'
-    add_profile_env_var "GOROOT" "$go_root"
+    add_profile_env_var "GOROOT" "${go_root}"
     add_profile_env_var "GO111MODULE" 'off'
     add_to_path '$GOROOT/bin:$GOPATH/bin'
     # testing path
     log_info "making sure go was successfully added to path"
     go version
-    log_info "cleaning up $go_archive"
-    rm -rf "$go_archive"
+    log_info "cleaning up ${go_archive}"
+    rm -rf "${go_archive}"
     rm -f "${download_list}"
 }
 export -f go_installer

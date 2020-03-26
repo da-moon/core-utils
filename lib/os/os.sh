@@ -29,10 +29,10 @@ function is_pkg_installed() {
     dpkg -s "$pkg" 2>/dev/null | grep ^Status | grep -q installed
 }
 function confirm_sudo() {
-    if ! is_root; then
-        log_error "needs root permission to run.exiting..."
-        exit 1
-    fi
+    # if ! is_root; then
+    #     log_error "needs root permission to run.exiting..."
+    #     exit 1
+    # fi
     local target="sudo"
     if ! is_pkg_installed "apt-utils"; then
         log_info "apt-utils is not available ... installing now"
