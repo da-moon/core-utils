@@ -5,106 +5,65 @@ include build/functions/functions.mk
 
 THIS_FILE := $(firstword $(MAKEFILE_LIST))
 SELF_DIR := $(dir $(THIS_FILE))
-
-.PHONY:   test dep
-.SILENT:  test dep
-dep:  
-	- $(call print_running_target)
-	- $(eval name=gitt)
-	- $(eval target=build/targets/${name}.list)
-	- chmod +x cmd/${name}/${name}.sh
-	- $(RM) ${target}
-	- cmd/${name}/${name}.sh | grep -Eo 'sourced path.*' | cut -f2- -d: | sort -u | grep -oE '[^\/]*.[^\/]*.[^\/]*.$$' >> ${target}
-	- $(call print_completed_target)
-
-# do not change this order
-LIBS = lib/env/env.sh lib/string/string.sh lib/log/log.sh 
-LIBS += lib/array/array.sh lib/array/array.sh lib/file/file.sh   
-LIBS += lib/os/os.sh lib/extract/extract.sh lib/git/git.sh lib/install/init.sh
-LIBS += lib/install/node.sh lib/install/ffmpeg.sh lib/install/docker.sh lib/install/go.sh
-LIBS += lib/install/cpp.sh lib/install/openssl.sh lib/install/vscode.sh lib/install/java.sh
-LIBS += lib/install/docker.sh lib/install/hashicorp.sh 
-
-# todo add
-# homebrew
-# python 
-
-EXT=sh
-FLATTENED_NAME=coreutils-lib
-
 BINS:=$(call get_dirs,cmd)
 BUILD_TARGETS = $(BINS:%=build-%)
 FLATTEN_TARGETS = $(BINS:%=flatten-%)
 CLEAN_TARGETS = $(BINS:%=clean-%)
 
-.PHONY: build clean lib $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
-.SILENT: build clean lib $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
+.PHONY: build clean  $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
+.SILENT: build clean  $(BINS) $(BUILD_TARGETS) $(FLATTEN_TARGETS) $(CLEAN_TARGETS)
 
 build: clean 
 	- $(call print_running_target)
-	- $(MKDIR) flattened
-	- $(MKDIR) bin
-	- @$(MAKE) --no-print-directory -f $(THIS_FILE) lib
 	- @$(MAKE) --no-print-directory -f $(THIS_FILE) $(BUILD_TARGETS)
-	- $(RM) flattened
 	- $(call print_completed_target)
 clean: 
 	- $(call print_running_target)
 	- $(RM) flattened
 	- @$(MAKE) --no-print-directory -f $(THIS_FILE) $(CLEAN_TARGETS)
 	- $(call print_completed_target)
-lib:
-	- $(call print_running_target)
-	- $(eval output_temp=$(PWD)/flattened/${FLATTENED_NAME}_temp.${EXT})
-	- $(foreach O,\
-			$(LIBS),\
-			$(call append_to_file,\
-				$(output_temp),$(call read_file_content,$O)\
-			)\
-		)
-	- $(call print_completed_target)
-	- $(call print_completed_target,flattened makefiles)
-	- $(call remove_matching_lines,#!, $(output_temp))
-	- $(call print_completed_target,removed script shebangs)
-	- $(call remove_matching_lines,# shellcheck, $(output_temp))
-	- $(call print_completed_target,removed script shellcheck)
-	- $(call remove_matching_lines,dirname "${BASH_SOURCE[0]}" , $(output_temp))
-	- $(call print_completed_target,removed individual script source)
-	- $(call remove_empty_lines, $(output_temp))
-	- $(call print_completed_target,removed empty lines)
-	- $(call print_completed_target)
 
 $(BUILD_TARGETS):$(FLATTEN_TARGETS)
 	- $(call print_running_target)
 	- $(eval name=$(@:build-%=%))
-	- $(eval output=$(PWD)/bin/$(name))
+	- $(eval temp=build/targets/${name}-temp.list)
+	- $(eval target=build/targets/${name}.list)
+	- $(eval output_temp=$(PWD)/${name}-flattened.sh)
+	- $(eval output=$(PWD)/${name})
 	- $(call append_to_file,$(output),#!/usr/bin/env bash)
 	- $(call append_to_file,$(output),# Flattened ... do not modify )
-	- $(call print_completed_target,created main flattened script and added shebang)
-	- $(eval base = $(PWD)/flattened/${FLATTENED_NAME}_temp.${EXT})
-	- $(call append_to_file,$(output),$(call read_file_content,$(base)))	
-	- $(eval curr_file = $(PWD)/flattened/$(name)_temp.${EXT})
-	- $(call append_to_file,$(output),$(call read_file_content,$(curr_file)))	
-	- $(RM) flattened/$(name)_temp.${EXT}
+	- $(call append_to_file,$(output),$(call read_file_content,$(output_temp)))	
 	- chmod +x $(output)
+	- $(RM) $(output_temp)
 	- $(call print_completed_target)
+
 $(FLATTEN_TARGETS): 
 	- $(call print_running_target)
 	- $(eval name=$(@:flatten-%=%))
-	- $(eval output_temp=$(PWD)/flattened/$(name)_temp.${EXT})
+	- $(eval temp=build/targets/${name}-temp.list)
+	- $(eval target=build/targets/${name}.list)
+	- $(eval output_temp=$(PWD)/${name}-flattened.sh)
+	- $(eval cmd=$(PWD)/cmd/${name}/${name}.sh)
+	- chmod +x ${cmd}
+	- $(cmd) | grep -Eo 'sourced path.*' | cut -f2- -d: >> ${temp}
+	- awk '!seen[$$0]++' ${temp} > ${target}
+	- @echo $(cmd) >> ${target}
 	- $(foreach O,\
-			$(PWD)/cmd/$(name)/$(name).sh,\
+			$(call read_file_content,${target}),\
 			$(call append_to_file,\
 				$(output_temp),$(call read_file_content,$O)\
 			)\
 		)
-	- $(call print_completed_target,flattened libraries)
+	- $(call print_completed_target,flattened scripts)
 	- $(call remove_matching_lines,#!, $(output_temp))
 	- $(call print_completed_target,removed script shebangs)
 	- $(call remove_matching_lines,# shellcheck, $(output_temp))
 	- $(call print_completed_target,removed script shellcheck)
+	- $(call remove_matching_lines,sourced path:, $(output_temp))
 	- $(call remove_matching_lines,dirname "${BASH_SOURCE[0]}" , $(output_temp))
 	- $(call print_completed_target,removed individual script source)
+	- $(call remove_matching_lines,export -f, $(output_temp))
+	- $(call print_completed_target,removed function exports)
 	- $(call remove_empty_lines, $(output_temp))
 	- $(call print_completed_target,removed empty lines)
 	- $(call print_completed_target)
@@ -112,7 +71,15 @@ $(FLATTEN_TARGETS):
 $(CLEAN_TARGETS):
 	- $(call print_running_target)
 	- $(eval name=$(@:clean-%=%))
-	- $(RM) bin/$(name)
+	- $(MKDIR) build/targets
+	- $(eval temp=build/targets/${name}-temp.list)
+	- $(eval target=build/targets/${name}.list)
+	- $(eval output_temp=$(PWD)/${name}-flattened.sh)
+	- $(eval output=$(PWD)/${name})
+	- $(RM) ${temp}	
+	- $(RM) ${target}	
+	- $(RM) ${output}	
+	- $(RM) ${output_temp}
 	- $(call print_completed_target)
 test: 
 	- $(call print_running_target)

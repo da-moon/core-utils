@@ -190,3 +190,5 @@ export -f new_user_as_sudo
 export -f os_name
 export -f get_distro_name
 export -f execute_as_sudo
+# strip but the last two slashes
+# grep -oE '[^\/]*.[^\/]*.[^\/]*.$'

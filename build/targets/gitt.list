@@ -1,8 +1,0 @@
-lib/env/env.sh
-lib/extract/extract.sh
-lib/file/file.sh
-lib/git/git.sh
-lib/install/init.sh
-lib/log/log.sh
-lib/os/os.sh
-lib/string/string.sh
