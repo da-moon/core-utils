@@ -431,14 +431,14 @@ function add_repo() {
 }
 function apt_cleanup() {
     confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r download_list="/tmp/apt-fast.list"
     if file_exists "$download_list"; then
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
+        sudo apt-get install -y --fix-broken
         rm "$download_list"
     fi
-    apt-get clean
-    rm -rf /var/cache/apt/archives/*
+    sudo apt-get clean
+    sudo rm -rf /var/cache/apt/archives/*
 }
 function filter_installed() {
     local -r deps=("$@")
@@ -718,7 +718,7 @@ export -f git_user_stats
 export -f git_clone
 export -f git_release_list 
 function fast_apt() {
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
         local -r download_list="/tmp/apt-fast.list"
         local -r apt_cache="/var/cache/apt/archives"
@@ -732,8 +732,8 @@ function fast_apt() {
             echo " dir=$apt_cache" >>"$download_list"
         done
         if  file_exists "$download_list"; then
-            downloader "$download_list"
-            apt-get $command -y "$@" 
+            execute_as_sudo downloader "$download_list"
+            sudo apt-get $command -y "$@" 
             log_info "cleaning up apt cache ..."
             apt_cleanup
         else
@@ -742,51 +742,51 @@ function fast_apt() {
             apt_cleanup
         fi
     else
-        apt-get "$@"
+        sudo apt-get "$@"
     fi
 }
 export -f fast_apt
 function init() {
     confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if ! os_command_is_available "aria2c"; then
         log_info "aria2 not available.installing aria2 ..."
-        DEBIAN_FRONTEND=noninteractive apt-get install -yqq aria2
+        sudo apt-get install -yqq aria2
     fi
     if ! os_command_is_available "curl"; then
         log_info "curl not available.installing curl ..."
-        DEBIAN_FRONTEND=noninteractive apt-get install -yqq curl
+        sudo apt-get install -yqq curl
     fi
     if ! os_command_is_available "netselect-apt"; then
         log_info "netselect-apt not available.installing netselect-apt ..."
         if ! os_command_is_available "wget"; then
             log_info "wget not available.installing wget ..."
-            DEBIAN_FRONTEND=noninteractive apt-get install -yqq wget
+            sudo apt-get install -yqq wget
         fi
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
+        sudo apt-get install -y --fix-broken
         pushd "/tmp/" >/dev/null 2>&1
         rm -rf netselect*
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect_0.3.ds1-28+b1_amd64.deb" >>/tmp/netselect.list
         echo "http://ftp.us.debian.org/debian/pool/main/n/netselect/netselect-apt_0.3.ds1-28_all.deb" >>/tmp/netselect.list
         local -r netselect_links="/tmp/netselect.list"
         downloader "$netselect_links"
-        dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
-        dpkg -i netselect-apt_0.3.ds1-28_all.deb
+        sudo dpkg -i netselect_0.3.ds1-28+b1_amd64.deb
+        sudo dpkg -i netselect-apt_0.3.ds1-28_all.deb
         rm -rf netselect*
         [[ "$?" != 0 ]] && popd
         popd >/dev/null 2>&1
     fi
     if ! file_exists "/etc/apt/sources-fast.list"; then
         log_warn "fast apt sources have not been added. adding now ..."
-        netselect-apt \
+        sudo netselect-apt \
             --tests 15 \
             --sources \
             --nonfree \
             --outfile /etc/apt/sources-fast.list \
             stable
-        DEBIAN_FRONTEND=noninteractive apt-get update
+        sudo apt-get update
     fi
-      deps=("git" 
+      packages=("git" 
         "apt-utils" 
         "unzip" 
         "build-essential" 
@@ -806,25 +806,7 @@ function init() {
         "bzip2"
         "tmux"
         "zip")
-    local -r not_installed=$(filter_installed "${deps[@]}")
-    local -r download_list="/tmp/apt-fast.list"
-    for pkg in ${not_installed[@]}; do
-        log_info "adding ${pkg} to install candidates"
-        apt-get -y --print-uris install "$pkg" |
-            grep -o -E "(ht|f)t(p|ps)://[^\']+" >>"$download_list"
-    done
-    if  file_exists "$download_list"; then
-        pushd "/var/cache/apt/archives/" >/dev/null 2>&1
-            downloader "$download_list"
-            for pkg in ${not_installed[@]}; do
-                log_info "installing $pkg"
-                sudo apt-get install -yqq "$pkg"
-            done
-        [[ "$?" != 0 ]] && popd
-        popd >/dev/null 2>&1
-        log_info "cleaning up apt cache ..."
-        apt_cleanup
-    fi
+    fast_apt "install" "${packages[@]}"
     if has_parallel; then
         log_info "parallelizing env ..."
         env_parallel --install

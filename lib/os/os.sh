@@ -98,14 +98,14 @@ function add_repo() {
 }
 function apt_cleanup() {
     confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
+    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local -r download_list="/tmp/apt-fast.list"
     if file_exists "$download_list"; then
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken
+        sudo apt-get install -y --fix-broken
         rm "$download_list"
     fi
-    apt-get clean
-    rm -rf /var/cache/apt/archives/*
+    sudo apt-get clean
+    sudo rm -rf /var/cache/apt/archives/*
 }
 
 function filter_installed() {
