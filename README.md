@@ -188,6 +188,13 @@ curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-go | sudo bash -s -- 
 ```
 
+- `get-java` : the following installs latest version of go toolchain.
+
+```bash
+curl -fsSL \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-java | sudo bash -s -- 
+```
+
 ## issues
 
 - [x] `stream-dl` : install_apts not found

@@ -13,11 +13,12 @@ function get_go_latest_version() {
     echo "$(string_strip_prefix "$latest" "go")"
 }
 function go_installer() {
-      confirm_sudo
+    log_info "running as user ${USER} with home ${HOME}"
+    confirm_sudo
     # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if is_pkg_installed "golang-go"; then
         log_warn "golang-go is installed, removing..."
-        sudo apt-get remove -yqq golang-go
+        execute_as_sudo apt-get remove -yqq golang-go
     fi
     local arch
     arch=$(arch_probe)
@@ -65,7 +66,7 @@ function go_installer() {
     fi
     local -r go_root="${root_dir}/go"
     log_info "removing any existing installations at $go_root"
-    sudo rm -rf "$go_root" 
+    execute_as_sudo rm -rf "$go_root" 
     log_info "extracting ${go_archive} into ${go_root}"
     extract "${go_archive}" "${root_dir}"
     local -r go_tool_dir="${go_root}/bin"
@@ -80,8 +81,8 @@ function go_installer() {
     mkdir -p "${HOME}/go/pkg"
     if [[  -n "${USER+x}" ]]; then
         log_info "setting ownership of go dirs to ${USER}"
-            sudo chown "${USER}":"${USER}" "${HOME}/go" -R
-            sudo chmod g+rwx "${HOME}/go" -R
+            execute_as_sudo chown "${USER}":"${USER}" "${HOME}/go" -R
+            execute_as_sudo chmod g+rwx "${HOME}/go" -R
     fi
     # adding go to path
     log_info "adding GO env variables to \$HOME/.bashrc"
