@@ -70,6 +70,9 @@ extension and add the following to `$PWD/.vscode/settings.json`
 after this, every time you save a file with `#!/usr/bin/bash` shebang, it would run shell check on all
 workspace files that had the shebang.
 
+- [x] `get-docker` : installs latest docker and latest version of compose.
+- [x] `get-cpp` : installs cpp and llvm toolchains
+- [x] `get-vscode` : installs vscode and some useful extensions
 - [ ] `get-protobuf` : installs latest version of protobuf compiler.
 - [ ] `get-go` : installs latest version of golang compiler and tool chain.
 - [ ] `get-java` : installs latest version of java compiler.
@@ -198,11 +201,18 @@ curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-go | sudo bash -s -- 
 ```
 
-- `get-java` : the following installs latest version of go toolchain.
+- `get-java` : the following installs javac.
 
 ```bash
 curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-java | sudo bash -s -- 
+```
+
+- `get-vscode` : the following installs vscode.
+
+```bash
+curl -fsSL \
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-vscode | sudo bash -s -- 
 ```
 
 ## issues

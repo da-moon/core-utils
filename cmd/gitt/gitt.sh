@@ -46,7 +46,7 @@ function help() {
     echo "Optional Flags:"
     echo
     echo -e "  --init\t\tinitializes and installs dependancies for $(basename "$0")"
-    echo -e "  --update\t\tupdates $(basename "$0") to the letest version at master branch."
+    echo -e "  --update\t\tupdates $(basename "$0") to the latest version at master branch."
     echo -e "  --path\t\tSets target repo path."
     echo -e "  \t\t\tBy default, it is the directory terminal is running in."
     echo

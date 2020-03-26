@@ -1069,7 +1069,7 @@ function vscode_installer() {
 }
 export -f vscode_installer
 function vscode_extension_installer() {
-    if  !os_command_is_available "code"; then
+    if ! os_command_is_available "code"; then
         log_error "vscode_extension_installer cannot proceed forward since code was not found in path."
         exit 1
     fi    
@@ -1335,7 +1335,7 @@ function help() {
     echo "Optional Flags:"
     echo
     echo -e "  --init\t\tinitializes and installs dependancies for $(basename "$0")"
-    echo -e "  --update\t\tupdates $(basename "$0") to the letest version at master branch."
+    echo -e "  --update\t\tupdates $(basename "$0") to the latest version at master branch."
     echo
     echo "Example:"
     echo
