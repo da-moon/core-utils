@@ -21,5 +21,7 @@ RUN chmod +x "/usr/bin/run-sc"
 RUN wget -q -O /usr/bin/gitt https://raw.githubusercontent.com/da-moon/core-utils/master/bin/gitt
 RUN chmod +x "/usr/bin/gitt"
 RUN gitt --init || true;
+RUN wget -O ~/vsls-reqs https://aka.ms/vsls-linux-prereq-script && chmod +x ~/vsls-reqs && ~/vsls-reqs
+
 # RUN echo 'alias make=''make -j$(nproc)''' >>~/.bashrc
 CMD ["bash"] 
