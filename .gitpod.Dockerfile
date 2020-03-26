@@ -2,6 +2,7 @@ FROM gitpod/workspace-full
 USER root
 ARG SHELLCHECK_VERSION=stable
 ARG SHELLCHECK_FORMAT=gcc
+RUN apt-get update -q && apt-get install -yq curl
 RUN curl -fsSL \
     https://raw.githubusercontent.com/da-moon/core-utils/master/bin/fast-apt | sudo bash -s -- \
     --init
