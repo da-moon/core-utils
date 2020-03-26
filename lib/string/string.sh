@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 # Return true (0) if the first string contains the second string
 function string_contains() {
     local -r haystack="$1"

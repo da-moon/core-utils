@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
+
+
 # shellcheck source=./lib/os/os.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/os/os.sh"
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function fast_apt() {
     # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then

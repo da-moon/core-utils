@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck source=./lib/env/env.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/env/env.sh"
+
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
+
 function array_contains() {
     local -r needle="$1"
     shift

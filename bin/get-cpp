@@ -5,7 +5,9 @@ set -o functrace
 set -o errexit
 set -o nounset
 set -o pipefail
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }' 
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}" 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 # Return true (0) if the first string contains the second string
 function string_contains() {
     local -r haystack="$1"
@@ -108,6 +110,7 @@ export -f string_green
 export -f string_red
 export -f assert_not_empty
 export -f unique_id 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function log() {
     local -r level="$1"
     local -r message="$2"
@@ -144,6 +147,7 @@ export -f log
 export -f log_info
 export -f log_warn
 export -f log_error 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function array_contains() {
     local -r needle="$1"
     shift
@@ -190,6 +194,7 @@ export -f array_contains
 export -f array_split
 export -f array_join
 export -f array_prepend 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function array_contains() {
     local -r needle="$1"
     shift
@@ -236,6 +241,7 @@ export -f array_contains
 export -f array_split
 export -f array_join
 export -f array_prepend 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function file_exists() {
     local -r file="$1"
     [[ -f "$file" ]]
@@ -340,6 +346,7 @@ export -f add_to_bashrc
 export -f add_profile_env_var
 export -f add_to_path
 export -f downloader 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function is_root() {
     [ "$EUID" == 0 ]
 }
@@ -517,6 +524,7 @@ export -f new_user_as_sudo
 export -f os_name
 export -f get_distro_name
 export -f execute_as_sudo 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 # "extract <file> [path]" "extract any given archive"
 function extract() {
     if ! os_command_is_available "unzip"; then
@@ -582,6 +590,7 @@ function extract() {
     fi
 }
 export -f extract 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 # package functions
 function is_git_available() {
     if ! os_command_is_available "git"; then
@@ -733,6 +742,7 @@ export -f git_repo_size
 export -f git_user_stats
 export -f git_clone
 export -f git_release_list 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function fast_apt() {
     # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if echo "$@" | grep -q "upgrade\|install\|dist-upgrade"; then
@@ -835,6 +845,7 @@ if ! min_bash_version "$bash_version"; then
     log_error "you bash version is ${BASH_VERSINFO}.Minimum supported version is $bash_version"
     exit 1
 fi 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 # end of shared base
 function node_installer() {
     if ! is_root; then
@@ -862,6 +873,7 @@ function node_installer() {
     fi
 }
 export -f node_installer 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function ffmpeg_installer() {
     if ! is_root; then
         log_error "needs root permission to run.exiting..."
@@ -887,6 +899,7 @@ function ffmpeg_installer() {
     fi
 }
 export -f ffmpeg_installer 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function docker_installer() {
     if ! is_root; then
         log_error "needs root permission to run.exiting..."
@@ -939,6 +952,7 @@ function docker_installer() {
     sudo chmod +x "$compose_path"
 }
 export -f docker_installer 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function get_go_latest_version() {
     local -r reply=$(curl -sL https://golang.org/dl/?mode=json)
     local -r versions=$(echo "$reply" | jq -r '.[].version')
@@ -1039,6 +1053,7 @@ function go_installer() {
 }
 export -f go_installer
 export -f get_go_latest_version 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function cpp_installer() {
     if ! is_root; then
         log_error "needs root permission to run.exiting..."
@@ -1056,6 +1071,8 @@ function cpp_installer() {
     fast_apt "install" "${packages[@]}"
 }
 export -f cpp_installer 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function vscode_installer() {
     if  os_command_is_available "code"; then
         log_warn "vscode has already been installed...skipping installation." 
@@ -1132,6 +1149,7 @@ function vscode_extension_installer() {
     code --install-extension alefragnani.Bookmarks
 }
 export -f vscode_extension_installer 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function java_installer() {
     # [ "`whoami`" = root ] || exec sudo "$0" "$@"
     log_info "started procedure for java"
@@ -1156,6 +1174,7 @@ function java_installer() {
     mkdir -p ${HOME}/.gradle/
     add_profile_env_var "GRADLE_USER_HOME" '${HOME}/.gradle/'
 } 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function docker_installer() {
     if ! is_root; then
         log_error "needs root permission to run.exiting..."
@@ -1208,6 +1227,7 @@ function docker_installer() {
     sudo chmod +x "$compose_path"
 }
 export -f docker_installer 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function get_hashi_latest_version() {
     if [[ $# != 1 ]]; then
         echo
@@ -1279,6 +1299,7 @@ function get_hashi() {
 }
 export -f get_hashi_latest_version
 export -f get_hashi 
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 if [ -z "${BASH_SOURCE+x}" ]; then
     if ! is_root; then
         log_error "needs root permission to run.exiting..."

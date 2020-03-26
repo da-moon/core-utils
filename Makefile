@@ -6,8 +6,16 @@ include build/functions/functions.mk
 THIS_FILE := $(firstword $(MAKEFILE_LIST))
 SELF_DIR := $(dir $(THIS_FILE))
 
-.PHONY:   test
-.SILENT:  test
+.PHONY:   test dep
+.SILENT:  test dep
+dep:  
+	- $(call print_running_target)
+	- $(eval name=gitt)
+	- $(eval target=build/targets/${name}.list)
+	- chmod +x cmd/${name}/${name}.sh
+	- $(RM) ${target}
+	- cmd/${name}/${name}.sh | grep -Eo 'sourced path.*' | cut -f2- -d: | sort -u | grep -oE '[^\/]*.[^\/]*.[^\/]*.$$' >> ${target}
+	- $(call print_completed_target)
 
 # do not change this order
 LIBS = lib/env/env.sh lib/string/string.sh lib/log/log.sh 
@@ -54,6 +62,7 @@ lib:
 				$(output_temp),$(call read_file_content,$O)\
 			)\
 		)
+	- $(call print_completed_target)
 	- $(call print_completed_target,flattened makefiles)
 	- $(call remove_matching_lines,#!, $(output_temp))
 	- $(call print_completed_target,removed script shebangs)

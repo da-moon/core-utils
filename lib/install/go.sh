@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+
+
 # shellcheck source=./lib/install/init.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/install/init.sh"
 # shellcheck source=./lib/extract/extract.sh
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/extract/extract.sh"
-
+[[ -n "${BASH_SOURCE+x}" ]] && [[ $0 != $BASH_SOURCE ]] && echo "sourced path:${BASH_SOURCE[0]}"
 function get_go_latest_version() {
     local -r reply=$(curl -sL https://golang.org/dl/?mode=json)
     local -r versions=$(echo "$reply" | jq -r '.[].version')
