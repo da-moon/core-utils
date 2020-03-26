@@ -89,6 +89,7 @@ function init() {
         "ufw"
         "progress"
         "bzip2"
+        "strace"
         "tmux"
         "zip")
     fast_apt "install" "${packages[@]}"
