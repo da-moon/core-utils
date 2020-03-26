@@ -15,6 +15,10 @@ function vscode_installer() {
 }
 export -f vscode_installer
 function vscode_extension_installer() {
+    if is_root; then
+        log_error "vscode_extension_installer must be invoked without root.exiting..."
+        exit 1
+    fi
     if ! os_command_is_available "code"; then
         log_error "vscode_extension_installer cannot proceed forward since code was not found in path."
         exit 1

@@ -17,6 +17,10 @@ LIBS += lib/install/node.sh lib/install/ffmpeg.sh lib/install/docker.sh lib/inst
 LIBS += lib/install/cpp.sh lib/install/openssl.sh lib/install/vscode.sh lib/install/java.sh
 LIBS += lib/install/docker.sh lib/install/hashicorp.sh 
 
+# todo add
+# homebrew
+#  
+
 EXT=sh
 FLATTENED_NAME=coreutils-lib
 
