@@ -8,10 +8,11 @@ function help() {
     echo "Usage: [$(basename "$0")] [OPTIONAL ARG] [COMMAND | COMMAND <FLAG> <ARG>]"
     echo
     echo
-    echo -e "[Synopsis]:\tdownloads and install lates version of go toolchain"
+    echo -e "[Synopsis]:\tdownloads and install latest version of go toolchain"
     echo -e "  --user\t\tuser to install go toolchain for"
     echo -e "\t\tgo folders will be created under '$${home}/go'"
     echo
+    echo -e "  --version\t\tgo toolchain version"
     echo
     echo "Optional Flags:"
     echo
@@ -84,17 +85,11 @@ function main() {
 }
 
 if [ -z "${BASH_SOURCE+x}" ]; then
-    init
-    version=$(get_go_latest_version) 
-    log_info "started go toolchain ${version} installation"
-    go_installer "$version"
+    main "${@}"
     exit $?
 else
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-        init
-        version=$(get_go_latest_version) 
-        log_info "started go toolchain ${version} installation"
-        go_installer "$version"
+        main "${@}"
         exit $?
     fi
 fi

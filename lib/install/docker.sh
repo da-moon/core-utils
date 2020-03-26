@@ -6,11 +6,20 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/install/init.
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/git/git.sh"
 
 function docker_installer() {
+    if ! is_root; then
+        log_error "needs root permission to run.exiting..."
+        exit 1
+    fi
+    if [[ $# == 0 ]]; then
+        log_error "No argument was passed to go_installer"
+        exit 1
+    fi
+    local -r user="$1"
+    local home="/home/$user"
     confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     local compose_version=$(get_latest_release_from_git "docker" "compose") 
-    if [[ $# == 1 ]]; then
-        compose_version="$1"
+    if [[ $# == 2 ]]; then
+        compose_version="$2"
     fi
     log_info "started procedure for docker/docker-compose"
     log_info "adding docker apt repo key"
@@ -21,18 +30,18 @@ function docker_installer() {
     local -r packages=("docker-ce" "docker-ce-cli" "containerd.io")
     fast_apt "install" "${packages[@]}"
     if os_command_is_available "docker"; then
-        if [[  -n "${HOME+x}" ]]; then
+        if [[  -n "${home+x}" ]]; then
             log_info "making docker directories"
-            mkdir -p "$HOME/.docker"
-            mkdir -p "$HOME/.local/share/applications/"
-            mkdir -p "$HOME/.local/bin"
+            mkdir -p "$home/.docker"
+            mkdir -p "$home/.local/share/applications/"
+            mkdir -p "$home/.local/bin"
         fi
-        if [[  -n "${USER+x}" ]]; then
-            log_info "adding docker image and transferring setting docker folder permission"
-            newgrp docker
-            usermod -aG docker "$USER"
-            chown "$USER":"$USER" "/$HOME/.docker" -R
-            chmod g+rwx "$HOME/.docker" -R
+        if [[  -n "${user+x}" ]]; then
+            log_info "adding docker image and transferring setting docker folder permission to ${user}"
+            sudo newgrp docker
+            sudo usermod -aG docker "$user"
+            sudo chown "$user":"$user" "/$home/.docker" -R
+            sudo chmod g+rwx "$home/.docker" -R
         fi
         if os_command_is_available "systemctl"; then
             log_info "enabling docker service"
@@ -41,10 +50,10 @@ function docker_installer() {
     fi
     local -r url="https://github.com/docker/compose/releases/download/"$compose_version"/docker-compose-$(uname -s)-$(uname -m)"
     local -r compose_path="/usr/local/bin/docker-compose"
-    log_info "installing docker-compose version $compose_version with url $url"
-    curl \
+    log_info "installing docker-compose version $compose_version for ${user} with url $url"
+    sudo curl \
         -L "$url" \
         -o "$compose_path" && \
-    chmod +x "$compose_path"
+    sudo chmod +x "$compose_path"
 }
 export -f docker_installer

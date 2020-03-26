@@ -17,7 +17,7 @@ function go_installer() {
         log_error "needs root permission to run.exiting..."
         exit 1
     fi
-     if [[ $# == 0 ]]; then
+    if [[ $# == 0 ]]; then
         log_error "No argument was passed to go_installer"
         exit 1
     fi
