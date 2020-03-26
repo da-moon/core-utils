@@ -932,17 +932,11 @@ function get_go_latest_version() {
     echo "$(string_strip_prefix "$latest" "go")"
 }
 function go_installer() {
-    local user="${USER}"
-    local -r home="${HOME}"
-    log_info "before user > $user"
-    log_info "before home > $home"
-    confirm_sudo
-    [ "$(whoami)" = root ] || exec sudo "$0" "$@"
-    log_info "after user > $user"
-    log_info "after home > $home"
+      confirm_sudo
+    # [ "$(whoami)" = root ] || exec sudo "$0" "$@"
     if is_pkg_installed "golang-go"; then
         log_warn "golang-go is installed, removing..."
-        apt-get remove -yqq golang-go
+        sudo apt-get remove -yqq golang-go
     fi
     local arch
     arch=$(arch_probe)
@@ -990,7 +984,7 @@ function go_installer() {
     fi
     local -r go_root="${root_dir}/go"
     log_info "removing any existing installations at $go_root"
-    rm -rf "$go_root" 
+    sudo rm -rf "$go_root" 
     log_info "extracting ${go_archive} into ${go_root}"
     extract "${go_archive}" "${root_dir}"
     local -r go_tool_dir="${go_root}/bin"
@@ -1000,13 +994,13 @@ function go_installer() {
     # creating go folders
     log_info "creating GOPATH folders at \$HOME/go/bin \$HOME/go/pkg \$HOME/go/src"
     log_info "making go dirs at ${home}"
-    mkdir -p "${home}/go/bin"
-    mkdir -p "${home}/go/src"
-    mkdir -p "${home}/go/pkg"
-    if [[  -n "${user+x}" ]]; then
-        log_info "setting ownership of go dirs to ${user}"
-            chown "${user}":"${user}" "/${home}/go" -R
-            chmod g+rwx "${home}/go" -R
+    mkdir -p "${HOME}/go/bin"
+    mkdir -p "${HOME}/go/src"
+    mkdir -p "${HOME}/go/pkg"
+    if [[  -n "${USER+x}" ]]; then
+        log_info "setting ownership of go dirs to ${USER}"
+            sudo chown "${USER}":"${USER}" "${HOME}/go" -R
+            sudo chmod g+rwx "${HOME}/go" -R
     fi
     # adding go to path
     log_info "adding GO env variables to \$HOME/.bashrc"
@@ -1023,6 +1017,30 @@ function go_installer() {
 }
 export -f go_installer
 export -f get_go_latest_version 
+function java_installer() {
+    # [ "`whoami`" = root ] || exec sudo "$0" "$@"
+    log_info "started procedure for java"
+    log_info "downloading sdkman script"
+    curl -fsSL "https://get.sdkman.io" | bash 
+    log_info "running sdkman init script"
+    chmod +x ${HOME}/.sdkman/bin/sdkman-init.sh
+    source ${HOME}/.sdkman/bin/sdkman-init.sh 
+    sdk install java 11.0.6.hs-adpt 
+    log_info "installing gradle"
+    sdk install gradle 
+    log_info "installing maven"
+    sdk install maven 
+    log_info "cleaning up"
+    sdk flush archives 
+    sdk flush temp 
+    log_info "storing setting at ${HOME}/.m2/settings.xml "
+    mkdir -p $HOME/.m2 
+    printf '<settings>\n  <localRepository>/workspace/m2-repository/</localRepository>\n</settings>\n' > $HOME/.m2/settings.xml
+    add_to_bashrc '[[ -s \"$HOME/.sdkman/bin/sdkman-init.sh\" ]] && source \"$HOME/.sdkman/bin/sdkman-init.sh\"'
+    add_profile_env_var "SDKMAN_DIR" '${HOME}/.sdkman/'
+    mkdir -p ${HOME}/.gradle/
+    add_profile_env_var "GRADLE_USER_HOME" '${HOME}/.gradle/'
+} 
 function docker_installer() {
     confirm_sudo
     [ "$(whoami)" = root ] || exec sudo "$0" "$@"
