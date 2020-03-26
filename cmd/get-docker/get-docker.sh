@@ -47,21 +47,21 @@ function main() {
     fi
     local version=$(get_latest_release_from_git "docker" "compose") 
     local user
-    while [[ $# -gt 0 ]]; do
+       while [[ $# -gt 0 ]]; do
         local key="$1"
         case "$key" in
         --user)
             if ! is_root; then
-                log_error "needs root permission to run.exiting..."
-                exit 1
+               log_error "needs root permission to run.exiting..."
+               exit 1
             fi
             shift
             user="$1"
             ;;
         --version)
             if ! is_root; then
-                log_error "needs root permission to run.exiting..."
-                exit 1
+               log_error "needs root permission to run.exiting..."
+               exit 1
             fi
             shift
             version="$1"
@@ -71,18 +71,20 @@ function main() {
             shift
             ;;
         *)
-        if [ -z ${user+x} ]; then 
             help
             exit
-         else
-            init
-            docker_installer "${user}" "${version}"
-            exit
-        fi
             ;;
         esac
         shift
     done
+    if [ -z ${user+x} ]; then 
+        help
+        exit
+    else
+        init
+        docker_installer "${user}" "${version}"
+        exit
+    fi
 }
 
 if [ -z "${BASH_SOURCE+x}" ]; then
