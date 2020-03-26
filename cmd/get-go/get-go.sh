@@ -74,6 +74,7 @@ function main() {
             help
             exit
          else
+            [ "$(whoami)" = root ] || exec sudo "$0" "$@"
             init
             go_installer "${user}" "${version}"
             exit
