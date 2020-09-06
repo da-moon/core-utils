@@ -191,14 +191,14 @@ curl -fsSL \
 
 ```bash
 curl -fsSL \
-    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-docker | sudo bash -s -- 
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-docker | sudo bash -s -- --user `whoami`
 ```
 
 - `get-go` : the following installs latest version of go toolchain.
 
 ```bash
 curl -fsSL \
-    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-go | sudo bash -s -- 
+    https://raw.githubusercontent.com/da-moon/core-utils/master/bin/get-go | sudo bash -s -- --user `whoami`
 ```
 
 - `get-java` : the following installs javac.
